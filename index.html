@@ -113,8 +113,8 @@ const fdt=s=>new Date(s).toLocaleString('fr-FR',{weekday:'long',day:'numeric',mo
 async function evs(){const{data}=await sb.from('events').select('*,attendance(user_id,status,profiles(name,pupitre))').gte('starts_at',new Date(Date.now()-864e5).toISOString()).order('starts_at');const L=(data||[]).filter(e=>+new Date(e.ends_at||+new Date(e.starts_at)+72e5)>Date.now());L.forEach(e=>EV[e.id]=e);return L}
 function evc(e,del){const at=e.attendance||[],m=at.find(x=>x.user_id==me.id),p=at.filter(x=>x.status=='present'),n=at.filter(x=>x.status=='absent'),rp=e.type=='repetition',nm=l=>l.map(x=>esc((x.profiles||{}).name||'?')).join(', ')||'—';
 return `<div class="c g"><b>${esc(e.title)}</b><p class="m">${fdt(e.starts_at)}${e.location?'<br>'+esc(e.location):''}</p>${e.note?`<p>${esc(e.note)}</p>`:''}`
-+(rp?`<div class="r"><button class="${m&&m.status=='present'?'ok':'o'}" onclick="rsvp(${e.id},'present')">✓ Présent(e)</button><button class="${m&&m.status=='absent'?'no':'o'}" onclick="rsvp(${e.id},'absent')">✗ Absent(e)</button></div>`:'')
-+(rp&&me.role=='cheffe'?`<p class="m">${p.length} présent(s) · ${n.length} absent(s) · ${Math.max(0,TOT-p.length-n.length)} sans réponse</p><p class="m">✓ ${nm(p)}<br>✗ ${nm(n)}</p>`:'')
++(true?`<div class="r"><button class="${m&&m.status=='present'?'ok':'o'}" onclick="rsvp(${e.id},'present')">✓ Présent(e)</button><button class="${m&&m.status=='absent'?'no':'o'}" onclick="rsvp(${e.id},'absent')">✗ Absent(e)</button></div>`:'')
++(true&&me.role=='cheffe'?`<p class="m">${p.length} présent(s) · ${n.length} absent(s) · ${Math.max(0,TOT-p.length-n.length)} sans réponse</p><p class="m">✓ ${nm(p)}<br>✗ ${nm(n)}</p>`:'')
 +`<div class="r"><button class="o" onclick="ics(${e.id})">Ajouter à mon calendrier</button>${del&&me.role=='cheffe'?`<button class="o" onclick="delEv(${e.id})">Supprimer</button>`:''}</div></div>`}
 async function agenda(){const l=await evs();if(me.role=='cheffe'){const r=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('status','valide').neq('role','cheffe');TOT=r.count||0}
 const f=l.filter(e=>e.type==sub),c=sub=='repetition';
