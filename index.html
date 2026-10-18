@@ -93,7 +93,7 @@ const bg=np?`<em class="bd">${np}</em>`:'';
 window.NP=np;const tb=(t,i,l,ex='',on)=>`<button class="${(on===undefined?tab==t:on)?'on':''}" onclick="${nv(t)}"><b>${i}</b>${l}${ex}</button>`;
 n.innerHTML=tb('home','⌂','Accueil')+tb('ag','▦','Agenda')+tb('rep','♫','Partitions')+tb('msg','✉','Messages','<em class="bd" id="mb" style="display:none"></em>')+tb('plus','⋯','Plus',bg,['plus','dem','bu','ch','pres','mem','me'].includes(tab));
 if(tab!='msg')updateBadge();
-if(tab=='msg'){a.innerHTML=await msgs();window.scrollTo(0,1e5);updateBadge();return}
+if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM;a.innerHTML=await msgs();window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();return}
 if((tab=='bu'&&me.role=='membre')||((tab=='ch'||tab=='pres')&&me.role!='cheffe')){a.innerHTML=hd(tab=='bu'?'Espace bureau':'Espace cheffe')+'<div class="c g"><b>Accès réservé</b><p>Vous ne pouvez pas entrer dans cette zone.</p></div>';return}
 if(tab=='rep'){a.innerHTML=await folders('repertoire','Répertoire');if(RD){const r=RD;RD=null;openReader(r)}return}
 if(tab=='bu'){a.innerHTML=await folders('bureau','Espace bureau');return}
