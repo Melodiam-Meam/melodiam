@@ -34,8 +34,10 @@ const PU=['soprano','mezzo-soprano','alto','ténor','baryton','basse'];
 let cur=null,EV={},TOT=0,sub='repetition',me=null,tab='home',mode='in',timer,loading=false;
 const first=()=>(me.name||'').split(' ')[0],er=t=>{$('.err').textContent=t};
 const hd=t=>`<div class="top"><div><p class="eb">MELODIAM MEAM</p><h1>${t}</h1></div><img src="${L}" alt="Logo Melodiam Meam"></div>`;
+let BT=0;
+async function chk(){if(!me)return;const{data,error}=await sb.from('profiles').select('id').eq('id',me.id).maybeSingle();if(!error&&!data){try{await sb.auth.signOut({scope:'local'})}catch(e){}sb.removeAllChannels();window.lv=0;me=null;tab='home';cur=null;stopA();draw()}}
 async function boot(){const{data:{session}}=await sb.auth.getSession();loading=false;me=null;
-if(session){const{data}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle();me=data;loading=!data}
+if(session){const{data}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle();me=data;if(data)BT=0;else if(++BT>4){BT=0;try{await sb.auth.signOut({scope:'local'})}catch(e){}sb.removeAllChannels();window.lv=0}loading=!data&&BT>0}
 if(me&&me.status=='valide'&&!window.lv){window.lv=1;live()}draw();if(loading)setTimeout(boot,1500)}
 async function draw(){clearInterval(timer);const a=$('#app'),n=$('#nav');n.innerHTML='';
 if(loading){a.innerHTML=hd('Chargement…');return}
@@ -99,7 +101,7 @@ async function dm(id){await sb.from('messages').delete().eq('id',id);draw()}
 let tk=0,EP=null;
 async function ep(){try{const s=await(await navigator.serviceWorker.ready).pushManager.getSubscription();EP=s?s.endpoint:null}catch(e){EP=null}}
 function beat(on){if(!EP||!me||me.status!='valide')return;sb.from('push_subs').update({active_at:on?new Date().toISOString():null}).eq('endpoint',EP).then(()=>{})}
-function live(){if(!window.pt){ep().then(()=>beat(1));window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tk%3==0)beat(1);if(tab=='msg'||tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(document.hidden)beat(0);else{beat(1);rt()}})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
+function live(){if(!window.pt){ep().then(()=>beat(1));window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tk%3==0)beat(1);if(tk%4==0)chk();if(tab=='msg'||tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(document.hidden)beat(0);else{beat(1);rt()}})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
 async function rt(){if(!me||me.status!='valide')return;if(tab=='msg'){cur?refreshChat():draw()}else updateBadge()}
 let fo=null,it=null,AU={},GR={};const FN={},SU={};
 const nv=t=>`tab='${t}';fo=null;it=null;cur=null;draw()`,rw=(t,l,d='')=>`<button class="row" onclick="${nv(t)}"><b>${l}</b><span class="m">${d}</span></button>`;
