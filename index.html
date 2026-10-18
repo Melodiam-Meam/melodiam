@@ -83,11 +83,19 @@ async function msgs(){if(!cur){const U=await unread();return hd('Messages')+CH.f
 const c=CH.find(x=>x[0]==cur),{data,error}=await sb.from('messages').select('*,profiles!messages_user_id_fkey(name),message_reads(user_id)').eq('channel',cur).order('created_at').limit(200),l=data||[];
 const un=l.filter(m=>m.user_id!=me.id&&!(m.message_reads||[]).some(r=>r.user_id==me.id));
 if(un.length)await sb.from('message_reads').upsert(un.map(m=>({message_id:m.id,user_id:me.id})),{onConflict:'message_id,user_id',ignoreDuplicates:true});
-return `<button class="o" onclick="cur=null;draw()">← Messages</button><h1>${c[1]}</h1>${error?`<p class="err">${esc(error.message)}</p>`:''}<div class="msgs">`+(l.map(m=>{const mine=m.user_id==me.id,rd=(m.message_reads||[]).length>0;return `<div class="b ${mine?'me':''}">${mine?'':`<i>${esc((m.profiles||{}).name)}</i>`}${esc(m.body)}<small>${hm(m.created_at)} ${mine?`<span class="${rd?'rd':''}">${rd?'✓✓':'✓'}</span> `:''}${mine||me.role=='cheffe'?`<a href="#" onclick="dm(${m.id});return false">Effacer</a>`:''}</small></div>`}).join('')||'<p class="m">Aucun message.</p>')+`</div>`+(canW(cur)?`<div class="r"><input id="mx" placeholder="Votre message" style="flex:1" onkeydown="if(event.key=='Enter')send()"><button onclick="send()">Envoyer</button></div>`:'<p class="m">Seule la cheffe peut écrire ici.</p>')}
-async function send(){const x=V('mx');if(!x)return;$('#mx').value='';await sb.from('messages').insert({channel:cur,body:x});draw()}
+return `<button class="o" onclick="cur=null;draw()">← Messages</button><h1>${c[1]}</h1>${error?`<p class="err">${esc(error.message)}</p>`:''}<div class="msgs" id="ml">`+bubbles(l)+`</div>`+(canW(cur)?`<div class="r"><input id="mx" placeholder="Votre message" style="flex:1" onkeydown="if(event.key=='Enter')send()"><button onclick="send()">Envoyer</button></div>`:'<p class="m">Seule la cheffe peut écrire ici.</p>')}
+const bubbles=l=>(l.map(m=>{const mine=m.user_id==me.id,rd=(m.message_reads||[]).length>0;return `<div class="b ${mine?'me':''}">${mine?'':`<i>${esc((m.profiles||{}).name)}</i>`}${esc(m.body)}<small>${hm(m.created_at)} ${mine?`<span class="${rd?'rd':''}">${rd?'✓✓':'✓'}</span> `:''}${mine||me.role=='cheffe'?`<a href="#" onclick="dm(${m.id});return false">Effacer</a>`:''}</small></div>`}).join('')||'<p class="m">Aucun message.</p>');
+async function refreshChat(){const el=$('#ml');if(tab!='msg'||!cur||!el)return;
+const{data}=await sb.from('messages').select('*,profiles!messages_user_id_fkey(name),message_reads(user_id)').eq('channel',cur).order('created_at').limit(200),l=data||[];
+const un=l.filter(m=>m.user_id!=me.id&&!(m.message_reads||[]).some(r=>r.user_id==me.id));
+if(un.length)await sb.from('message_reads').upsert(un.map(m=>({message_id:m.id,user_id:me.id})),{onConflict:'message_id,user_id',ignoreDuplicates:true});
+const sig=l.map(m=>m.id+':'+(m.message_reads||[]).length).join(',');if(el.dataset.s===sig)return;el.dataset.s=sig;
+const near=innerHeight+scrollY>=document.body.scrollHeight-160;el.innerHTML=bubbles(l);if(near)scrollTo(0,1e5);updateBadge()}
+async function send(){const x=V('mx');if(!x)return;$('#mx').value='';await sb.from('messages').insert({channel:cur,body:x});await refreshChat();scrollTo(0,1e5);const i=$('#mx');if(i)i.focus()}
 async function dm(id){await sb.from('messages').delete().eq('id',id);draw()}
-function live(){sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
-async function rt(){if(!me||me.status!='valide')return;if(tab=='msg'){const v=($('#mx')||{}).value;await draw();if(v&&$('#mx'))$('#mx').value=v}else updateBadge()}
+let tk=0;
+function live(){if(!window.pt){window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tab=='msg'||tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)rt()})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
+async function rt(){if(!me||me.status!='valide')return;if(tab=='msg'){cur?refreshChat():draw()}else updateBadge()}
 let fo=null,it=null,AU={},GR={};const FN={},SU={};
 const nv=t=>`tab='${t}';fo=null;it=null;cur=null;draw()`,rw=(t,l,d='')=>`<button class="row" onclick="${nv(t)}"><b>${l}</b><span class="m">${d}</span></button>`;
 const canEdit=sp=>sp=='bureau'?me.role!='membre':me.role=='cheffe',BK='melodiam';
