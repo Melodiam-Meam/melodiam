@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#1556b8"><title>Melodiam</title><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Melodiam">
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0b0f1f"><title>Melodiam</title><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Melodiam">
 <style>
 :root{--bg:#fdfaf3;--card:#fff;--tx:#0c2147;--mut:#68718c;--blue:#1556b8;--gold:#c59d45;--bd:#e1e5f5;--in:#f6f7fc}
 *{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:16px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;padding-bottom:100px}
@@ -24,6 +24,25 @@ nav button{flex:1;background:none;color:var(--mut);font-size:.72rem;padding:4px 
 #rc{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
 .av{display:inline-grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#1556b8,#0c2147);color:#fff;font-family:sans-serif;font-weight:700;line-height:1;overflow:hidden;flex:none;border:1.5px solid var(--gold)}.av img{width:100%;height:100%;object-fit:cover;display:block}
 .who{display:flex;align-items:center;gap:6px;margin-bottom:3px}.who i{margin:0}
+
+:root{color-scheme:dark;--bg:#0b0f1f;--card:rgba(20,22,40,.62);--tx:#f3ece0;--mut:#b4ad9f;--blue:#d9bd8f;--gold:#d9bd8f;--bd:rgba(217,189,143,.28);--in:rgba(255,255,255,.07)}
+body{background:#0b0f1f}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,10,22,.12) 0%,rgba(8,10,22,.5) 30%,rgba(8,10,22,.82) 60%,rgba(8,10,22,.92) 100%),url(fond.jpg) center top/cover no-repeat}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:500}
+button{color:#1a1405}button.ok,button.no{color:#fff}.tabs button.on{color:#1a1405}
+.c,.row,.b{backdrop-filter:blur(8px)}.b.me{background:rgba(217,189,143,.22)}
+nav{background:rgba(10,12,26,.88);backdrop-filter:blur(14px);border-top:1px solid var(--bd)}nav button.on span{background:rgba(217,189,143,.18)}
+.hero{text-align:center;padding:6px 0 8px}.hero img{width:78px;height:78px;border-radius:50%;background:#fff;padding:3px;border:2px solid var(--gold);box-shadow:0 0 28px rgba(217,189,143,.35)}
+.hn{font-family:Georgia,serif;font-size:1.7rem;letter-spacing:.14em;margin-top:10px}.hs{font-size:.72rem;letter-spacing:.5em;margin-top:2px;color:var(--mut)}
+.hsc{font-family:'Snell Roundhand','Apple Chancery','Segoe Script',cursive;font-style:italic;font-size:1.35rem;color:var(--gold);margin-top:14px}.hl{width:60px;height:1px;background:var(--gold);margin:12px auto}
+.hq{font-family:Georgia,serif;font-size:1.6rem;margin:6px 0}
+.gl{background:rgba(20,22,40,.62);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:22px;padding:16px;margin:14px 0}.gl h2{margin-top:0}
+.gb{display:flex;gap:16px;align-items:center;margin:8px 0 12px}.dt{text-align:center;min-width:56px;border-right:1px solid var(--bd);padding-right:16px;font-family:Georgia,serif}
+.dt small{display:block;font-size:.72rem;letter-spacing:.12em;color:var(--mut)}.dt b{font-size:2.3rem;line-height:1;font-weight:500;display:block}.gi{display:flex;flex-direction:column;gap:2px}.gi span{color:var(--mut);font-size:.92rem}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.tl{background:rgba(20,22,40,.62);backdrop-filter:blur(8px);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:14px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:112px;font-weight:400}
+.tl i{font-style:normal;font-size:1.7rem;color:var(--gold)}.tl b{font-family:Georgia,serif;font-weight:500;font-size:1rem}.tl small{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);text-align:center;line-height:1.3}
+.foot{text-align:center;font-family:Georgia,serif;font-style:italic;color:var(--mut);margin:20px 0 0}
+.hqt{font-family:Georgia,serif;font-style:italic;font-size:1.05rem;line-height:1.5;color:var(--tx);margin:4px 0 18px}
 </style></head><body><main id="app"></main><div id="rd" hidden><div id="rb"><button class="o" onclick="closeR()">✕ Fermer</button><b id="rt"></b><span id="rn"></span><button onclick="rdPlay()">♫</button></div><div id="rc" onclick="tap(event)"></div></div><div id="mp" hidden><b id="mt"></b><button class="o" onclick="tg()">⏯</button><button class="o" onclick="stopA()">✕</button></div><nav id="nav"></nav><audio id="pl" playsinline></audio>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -61,7 +80,10 @@ a.innerHTML=hd('Demandes')+(data&&data.length?data.map(u=>`<div class="c g"><b>$
 if(tab=='ag'){a.innerHTML=await agenda();return}
 if(tab=='me'){a.innerHTML=hd('Profil')+`<div class="c g"><b>${esc(me.name)}</b><p class="m">${me.role=='cheffe'?'Cheffe de chœur':esc(me.pupitre)+(me.role=='bureau'?' · '+((PO.find(p=>p[0]==me.poste)||[])[1]||'bureau'):'')}</p><button class="o" onclick="out()">Se déconnecter</button></div>`;return}
 const l=await evs(),nx=l.find(e=>e.type=='repetition'&&new Date(e.starts_at)>new Date(Date.now()-72e5));
-a.innerHTML=hd(`Bonjour ${esc(first())} ✨`)+`<p class="m">Plus qu’un chœur, une voix commune.</p><h2>Prochaine répétition</h2>`+(nx?evc(nx):'<div class="c m">Aucune répétition à venir. Les prochaines dates apparaîtront ici.</div>')+`<button class="big" onclick="tab='ag';draw()">Ouvrir l’agenda →</button>`}
+const hr=s=>new Date(s).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}).replace(':',' h '),dd=nx?new Date(nx.starts_at):null,mm=nx&&(nx.attendance||[]).find(x=>x.user_id==me.id),tl=(t,i,n,s)=>`<button class="tl" onclick="${nv(t)}"><i>${i}</i><b>${n}</b><small>${s}</small></button>`;
+a.innerHTML=`<div class="hero"><img src="${L}" alt="Logo Melodiam Meam"><div class="hn">MELODIAM MEAM</div><div class="hs">ENSEMBLE VOCAL</div><div class="hsc">Chanter · Partager · Vibrer</div><div class="hl"></div><p class="hqt">« La musique est plus belle<br>quand elle est partagée »</p><p class="hq">Bonjour ${esc(first())}</p></div>`
++`<div class="gl"><h2>Prochaine répétition</h2>`+(nx?`<div class="gb"><div class="dt"><small>${dd.toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','').toUpperCase()}</small><b>${dd.getDate()}</b><small>${dd.toLocaleDateString('fr-FR',{month:'short'}).replace('.','').toUpperCase()}</small></div><div class="gi"><b>${esc(nx.title)}</b><span>${hr(nx.starts_at)}${nx.ends_at?' – '+hr(nx.ends_at):''}</span>${nx.location?`<span>${esc(nx.location)}</span>`:''}</div></div><div class="r"><button class="${mm&&mm.status=='present'?'ok':'o'}" onclick="rsvp(${nx.id},'present')">✓ Présent(e)</button><button class="${mm&&mm.status=='absent'?'no':'o'}" onclick="rsvp(${nx.id},'absent')">✗ Absent(e)</button><button onclick="tab='ag';draw()">Voir les détails →</button></div>`:'<p class="m">Aucune répétition à venir. Les prochaines dates apparaîtront ici.</p>')+`</div>`
++`<h2>Accès rapides</h2><div class="g3">${tl('ag','▦','Calendrier','Répétitions et concerts')}${tl('rep','♫','Partitions','Nos œuvres')}${tl('msg','✉','Messages','Échanger ensemble')}${me.role!='membre'?tl('bu','▤','Bureau','Documents et postes'):''}${me.role=='cheffe'?tl('ch','★','Cheffe','Demandes et présences'):''}${tl('plus','☺','Mon profil','Photo et compte')}</div>`}
 const fdt=s=>new Date(s).toLocaleString('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}).replace(':',' h ');
 async function evs(){const{data}=await sb.from('events').select('*,attendance(user_id,status,profiles(name,pupitre))').gte('starts_at',new Date(Date.now()-864e5).toISOString()).order('starts_at');(data||[]).forEach(e=>EV[e.id]=e);return data||[]}
 function evc(e,del){const at=e.attendance||[],m=at.find(x=>x.user_id==me.id),p=at.filter(x=>x.status=='present'),n=at.filter(x=>x.status=='absent'),rp=e.type=='repetition',nm=l=>l.map(x=>esc((x.profiles||{}).name||'?')).join(', ')||'—';
