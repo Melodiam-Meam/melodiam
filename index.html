@@ -91,7 +91,7 @@ async function rt(){if(!me||me.status!='valide')return;if(tab=='msg'){const v=($
 let fo=null,it=null,AU={},GR={};const FN={},SU={};
 const nv=t=>`tab='${t}';fo=null;it=null;cur=null;draw()`,rw=(t,l,d='')=>`<button class="row" onclick="${nv(t)}"><b>${l}</b><span class="m">${d}</span></button>`;
 const canEdit=sp=>sp=='bureau'?me.role!='membre':me.role=='cheffe',BK='melodiam';
-function plus(){return hd('Plus')+(me.role!='membre'?rw('bu','▤ Espace bureau'):'')+(me.role=='cheffe'?rw('ch','★ Espace cheffe de chœur',window.NP?NP+' demande(s)':''):'')+`<div class="c g"><b>${esc(me.name)}</b><p class="m">${me.role=='cheffe'?'Cheffe de chœur':esc(me.pupitre)+(me.role=='bureau'?' · bureau':'')}</p><button class="o" onclick="out()">Se déconnecter</button></div>`}
+function plus(){return hd('Plus')+(me.role!='membre'?rw('bu','▤ Espace bureau'):'')+(me.role=='cheffe'?rw('ch','★ Espace cheffe de chœur',window.NP?NP+' demande(s)':''):'')+`<div class="c"><h3>Notifications</h3><p class="m">Une alerte à chaque nouveau message et à chaque nouveau concert.</p><button onclick="pushOn()">Activer les notifications</button><p id="pm" class="m"></p></div>`+`<div class="c g"><b>${esc(me.name)}</b><p class="m">${me.role=='cheffe'?'Cheffe de chœur':esc(me.pupitre)+(me.role=='bureau'?' · bureau':'')}</p><button class="o" onclick="out()">Se déconnecter</button></div>`}
 async function folders(sp,title){const ed=canEdit(sp),st=sb.storage.from(BK);
 if(!fo){const{data}=await sb.from('folders').select('*').eq('space',sp).order('name');
 return hd(title)+(sp=='cheffe'?rw('dem','✓ Demandes d’inscription',window.NP?NP+' en attente':'')+rw('pres','▦ Présences / absences'):'')+((data||[]).map(f=>{FN[f.id]=f.name;return `<button class="row" onclick="fo=${f.id};draw()"><b>📁 ${esc(f.name)}</b></button>`}).join('')||'<div class="c m">Aucun dossier.</div>')+(ed?`<div class="c"><h3>Nouveau dossier</h3><input id="nf" placeholder="Nom du dossier"><button onclick="addFo('${sp}')">Créer</button></div>`:'')}
@@ -122,6 +122,12 @@ function tap(e){if(!PDF)return;const r=$('#rc').getBoundingClientRect(),right=e.
 function closeR(){$('#rd').hidden=true;document.body.style.overflow=''}
 function rdPlay(){if(!AU.u)return;$('#mt').textContent=='♫ '+AU.t&&$('#pl').getAttribute('src')?tg():playA()}
 addEventListener('resize',()=>{if(PDF&&!$('#rd').hidden)showPg()});
+const VK='BKEQ81cPFhct5Yfv3KVUN9A3gq1ZndwP94D19Dnq3BE3bwJlGZ7ARMQY9AhCTQz4rFVV2JUTrTw12T9tT1EZggI';
+const u8=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'=')),c=>c.charCodeAt(0));
+async function pushOn(){const m=$('#pm');try{if(!('PushManager' in window)||!('Notification' in window))throw new Error('Installez d’abord l’application sur l’écran d’accueil, puis rouvrez-la depuis l’icône.');
+if(await Notification.requestPermission()!='granted')throw new Error('Autorisation refusée. Activez-la dans les réglages du téléphone.');
+const reg=await navigator.serviceWorker.ready,s=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(VK)}),j=s.toJSON();
+const r=await sb.from('push_subs').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,user_id:me.id});if(r.error)throw r.error;m.textContent='✓ Notifications activées sur cet appareil.'}catch(e){m.textContent=e.message||String(e)}}
 function auth(){return `<div class="tabs"><button class="${mode=='in'?'on':''}" onclick="mode='in';draw()">Connexion</button><button class="${mode=='up'?'on':''}" onclick="mode='up';draw()">Inscription</button></div><div class="c">`+(mode=='up'?`<input id="nm" placeholder="Prénom et nom" autocomplete="name"><select id="pu"><option value="">Mon pupitre…</option>${PU.map(p=>`<option>${p}</option>`).join('')}</select>`:'')+`<input id="em" type="email" placeholder="E-mail" autocomplete="email"><input id="pw" type="password" placeholder="Mot de passe (8 caractères minimum)" autocomplete="${mode=='up'?'new-password':'current-password'}"><p class="err"></p><button class="big" onclick="go()">${mode=='up'?'Demander mon inscription':'Se connecter'}</button>`+(mode=='up'?'<p class="m">La cheffe validera chaque inscription.</p>':'')+`</div>`}
 async function go(){const em=V('em'),pw=V('pw');let r;
 if(mode=='up'){const name=V('nm'),pu=V('pu');if(!name||!pu)return er('Indiquez votre nom et votre pupitre.');r=await sb.auth.signUp({email:em,password:pw,options:{data:{name,pupitre:pu}}})}
@@ -130,6 +136,7 @@ if(r.error)return er(/Invalid login/i.test(r.error.message)?'E-mail ou mot de pa
 if(mode=='up'&&!r.data.session)return er('Inscription enregistrée. Vérifiez vos e-mails pour confirmer.');
 loading=true;draw();boot()}
 async function ap(id,x){await sb.from('profiles').update(x=='refuse'?{status:'refuse'}:{status:'valide',role:x}).eq('id',id);draw()}
-async function out(){await sb.auth.signOut();sb.removeAllChannels();stopA();window.lv=0;cur=null;me=null;tab='home';draw()}
+async function out(){try{const s=await(await navigator.serviceWorker.ready).pushManager.getSubscription();if(s)await sb.from('push_subs').delete().eq('endpoint',s.endpoint)}catch(e){}await sb.auth.signOut();sb.removeAllChannels();stopA();window.lv=0;cur=null;me=null;tab='home';draw()}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 boot();
 </script></body></html>
