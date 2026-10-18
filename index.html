@@ -147,7 +147,7 @@ let TH=null;const thr=()=>cur=='prive'?{thread:TH}:{};
 async function msgList(){const U=await unread();await loadMem();const cf=MEM.find(u=>u.role=='cheffe'),nm=cf?fn(cf):'la cheffe',bd=n=>n?`<em class="bd">${n}</em>`:'';let b=hd('Messages');
 if(me.role!='cheffe')b+=`<button class="row" onclick="cur='prive';TH='${me.id}';draw()"><b>✉ Écrire à ${esc(nm)} en privé</b>${bd(U['prive:'+me.id])}</button>`;
 b+=[...CH.filter(c=>canR(c[0])),...CH.filter(c=>!canR(c[0]))].map(c=>canR(c[0])?`<button class="row" onclick="cur='${c[0]}';draw()"><b>${c[1]}</b>${bd(U[c[0]])}</button>`:`<button class="row lk" onclick="lockMsg()"><b>🔒 ${c[1]}</b><span class="m">Accès réservé</span></button>`).join('');
-if(me.role=='cheffe'){const ms=MEM.filter(u=>u.role!='cheffe').sort((a,c)=>(U['prive:'+c.id]||0)-(U['prive:'+a.id]||0)||a.name.localeCompare(c.name));
+if(me.role=='cheffe'){const LT={};((await sb.from('messages').select('thread,created_at').eq('channel','prive').order('created_at',{ascending:false}).limit(600)).data||[]).forEach(m=>{if(m.thread&&!LT[m.thread])LT[m.thread]=m.created_at});const ms=MEM.filter(u=>u.role!='cheffe').sort((a,c)=>(LT[c.id]||'').localeCompare(LT[a.id]||'')||a.name.localeCompare(c.name));
 b+=`<h2>Conversations privées</h2>`+(ms.map(u=>`<button class="row" data-id="${u.id}" onclick="cur='prive';TH=this.dataset.id;draw()"><span style="display:flex;align-items:center;gap:10px">${av(u.name,u.avatar,34)}<b>${esc(u.name)}</b></span>${U['prive:'+u.id]?bd(U['prive:'+u.id]):`<span class="m">${esc(u.pupitre)}</span>`}</button>`).join('')||'<div class="c m">Aucun membre inscrit.</div>')}
 return b}
 function lockMsg(){sheet('Accès réservé','<p>Vous ne pouvez pas entrer dans cette conversation.</p>')}
