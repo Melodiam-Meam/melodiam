@@ -294,8 +294,13 @@ async function ap(id,x){await sb.from('profiles').update(x=='refuse'?{status:'re
 async function out(){try{localStorage.removeItem('mel_me')}catch(e){}try{const s=await(await navigator.serviceWorker.ready).pushManager.getSubscription();if(s)await sb.from('push_subs').delete().eq('endpoint',s.endpoint)}catch(e){}await sb.auth.signOut();sb.removeAllChannels();stopA();window.lv=0;cur=null;me=null;tab='home';draw()}
 if(window.visualViewport){const f=()=>{const v=visualViewport,o=Math.max(0,Math.round(innerHeight-v.height-v.offsetTop));document.documentElement.style.setProperty('--kb',o+'px');document.documentElement.classList.toggle('kb',o>80)};visualViewport.addEventListener('resize',f);visualViewport.addEventListener('scroll',f)}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
-let sx=null,sy=0;document.addEventListener('touchstart',e=>{if(tab!='msg'||!cur||e.touches.length!=1||e.touches[0].clientX>40){sx=null;return}sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
-document.addEventListener('touchend',e=>{if(sx==null)return;const t=e.changedTouches[0],dx=t.clientX-sx,dy=Math.abs(t.clientY-sy);sx=null;if(dx>70&&dy<60){cur=null;draw()}},{passive:true});
+let sx=null,sy=0,sm=null,st=0,sk=[];
+const skSet=(x,t,o)=>sk.forEach(k=>{k.style.transition=t;k.style.transform=x?'translateX('+x+'px)':'';k.style.opacity=o})
+document.addEventListener('touchstart',e=>{if(tab!='msg'||!cur||e.touches.length!=1||e.touches[0].clientX>40){sx=null;return}sx=e.touches[0].clientX;sy=e.touches[0].clientY;sm=null;st=Date.now();sk=[...document.getElementById('app').children]},{passive:true});
+document.addEventListener('touchmove',e=>{if(sx==null)return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;if(sm==null&&(Math.abs(dx)>8||Math.abs(dy)>8))sm=(Math.abs(dx)>Math.abs(dy)&&dx>0)?'h':'v';if(sm=='v'){sx=null;return}if(sm=='h'){e.preventDefault();const x=Math.max(0,dx);skSet(x,'none',String(1-Math.min(x/innerWidth,1)*.6))}},{passive:false});
+document.addEventListener('touchend',e=>{if(sx==null)return;const dx=Math.max(0,e.changedTouches[0].clientX-sx),m=sm,dt=Math.max(1,Date.now()-st);sx=null;sm=null;if(m!='h')return;
+if(dx>innerWidth*.33||dx/dt>.6){skSet(innerWidth,'transform .2s ease-out, opacity .2s','0');setTimeout(()=>{cur=null;draw()},190)}else{skSet(0,'transform .2s ease-out, opacity .2s','1');setTimeout(()=>skSet(0,'','') ,230)}},{passive:true});
+document.addEventListener('touchcancel',()=>{if(sm=='h')skSet(0,'transform .2s','1');sx=null;sm=null},{passive:true});
 function rpUp(){const b=$('#rpb'),p=$('#pl');if(b&&p)b.textContent=p.paused?'▶ Écouter':'⏸ Pause'}
 try{['play','pause','ended'].forEach(e=>$('#pl').addEventListener(e,rpUp))}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
