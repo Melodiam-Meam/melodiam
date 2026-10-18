@@ -22,6 +22,7 @@ nav button{flex:1;background:none;color:var(--mut);font-size:.72rem;padding:4px 
 #rd{position:fixed;inset:0;background:#fff;z-index:20;display:flex;flex-direction:column;touch-action:manipulation;overscroll-behavior:none}#rd[hidden]{display:none}
 #rb{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;background:#0c2147;color:#fff}#rb b{flex:1;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rx{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.rc{background:rgba(255,255,255,.1);border:1px solid var(--bd);border-radius:12px;padding:1px 8px;font-size:.82rem;cursor:pointer}.rc.on{border-color:var(--gold);background:rgba(217,189,143,.2)}
 #ml .b{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.nosel,.nosel *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .emo{display:flex;justify-content:space-between;gap:4px;margin:6px 0 12px}.emo button{font-size:1.7rem;padding:6px 8px;min-height:0;border-radius:50%;background:transparent;border:1.5px solid transparent;line-height:1}.emo button.on{border-color:var(--gold);background:rgba(217,189,143,.2)}
 #rb button[hidden]{display:none}
 #rb button{padding:6px 12px;min-height:36px;color:#fff;border-color:#fff8}
@@ -192,7 +193,7 @@ async function loadMem(){if(Date.now()-MEMT<60000&&MEM.length)return;const{data}
 const acc=(u,ch)=>ch=='officiel'||ch=='general'||(ch=='dames'&&(u.role=='cheffe'||['soprano','mezzo-soprano','alto'].includes(u.pupitre)))||(ch=='messieurs'&&(u.role=='cheffe'||['ténor','baryton','basse'].includes(u.pupitre)))||(ch=='bureau'&&u.role!='membre'),
 recips=(ch,au)=>MEM.filter(u=>u.id!=au&&acc(u,ch)),
 prow=(u,x)=>u?`<div class="pr">${av(u.name,u.avatar,30)}<span>${esc(u.name)}</span><span class="m t">${x||esc(u.pupitre=='cheffe'?'cheffe':u.pupitre)}</span></div>`:'';
-function sheet(t,b){$('#shT').textContent=t;$('#shB').innerHTML=b;$('#sh').hidden=false}
+function sheet(t,b){$('#shB').className='';$('#shT').textContent=t;$('#shB').innerHTML=b;$('#sh').hidden=false}
 async function showVoters(id){const p=PV[id];if(!p)return;await loadMem();const by=Object.fromEntries(MEM.map(u=>[u.id,u]));let b='';
 p.opts.forEach((o,i)=>{const vs=p.votes.filter(v=>v.option==i);b+=`<h3>${esc(o)} <span class="m">· ${vs.length}</span></h3>`+(vs.map(v=>prow(by[v.user_id])).join('')||'<p class="m">Personne pour l’instant.</p>')});
 if(me.role=='cheffe'){const vt=new Set(p.votes.map(v=>v.user_id)),nv=recips(p.ch,p.author).filter(u=>!vt.has(u.id));b+=`<h3>Pas encore répondu <span class="m">· ${nv.length}</span></h3>`+(nv.map(u=>prow(u)).join('')||'<p class="m">Tout le monde a répondu.</p>')}
@@ -304,7 +305,8 @@ async function react(id,e){const rs=(RX[id]||{}).rs||[],own=rs.find(r=>r.user_id
 if(own&&own.emoji==e)await sb.from('message_reactions').delete().eq('message_id',id).eq('user_id',me.id);else await sb.from('message_reactions').upsert({message_id:id,user_id:me.id,emoji:e},{onConflict:'message_id,user_id'});await refreshChat(1)}
 function openReact(id){const d=RX[id]||{rs:[]},own=d.rs.find(r=>r.user_id==me.id);if(navigator.vibrate)try{navigator.vibrate(15)}catch(x){}
 const nm=u=>esc(((MEM||[]).find(p=>p.id==u)||{}).name||'?');
-sheet('Réagir',`<div class="emo">${EMO.map(e=>`<button class="${own&&own.emoji==e?'on':''}" onclick="react(${id},'${e}')">${e}</button>`).join('')}</div>`+(d.rs.length?'<h3>Réactions</h3>'+d.rs.map(r=>`<p class="m">${r.emoji} ${nm(r.user_id)}</p>`).join(''):'<p class="m">Choisissez une réaction.</p>')+(d.t?`<button class="o" style="margin-top:10px" onclick="navigator.clipboard.writeText(RX[${id}].t).then(()=>{$('#sh').hidden=true})">Copier le texte</button>`:''))}
+try{getSelection().removeAllRanges()}catch(x){}
+sheet('Réagir',`<div class="emo">${EMO.map(e=>`<button class="${own&&own.emoji==e?'on':''}" onclick="react(${id},'${e}')">${e}</button>`).join('')}</div>`+(d.rs.length?'<h3>Réactions</h3>'+d.rs.map(r=>`<p class="m">${r.emoji} ${nm(r.user_id)}</p>`).join(''):'<p class="m">Choisissez une réaction.</p>')+(d.t?`<button class="o" style="margin-top:10px" onclick="navigator.clipboard.writeText(RX[${id}].t).then(()=>{$('#sh').hidden=true})">Copier le texte</button>`:''));$('#shB').className='nosel'}
 (function(){let tm=null,px=0,py=0;
 document.addEventListener('touchstart',e=>{const b=e.target.closest&&e.target.closest('#ml .b');clearTimeout(tm);if(!b||e.touches.length!=1||e.target.closest('a,.rc,.po,img'))return;px=e.touches[0].clientX;py=e.touches[0].clientY;tm=setTimeout(()=>{tm=null;openReact(+b.dataset.id)},450)},{passive:true});
 document.addEventListener('touchmove',e=>{if(tm&&(Math.abs(e.touches[0].clientX-px)>10||Math.abs(e.touches[0].clientY-py)>10)){clearTimeout(tm);tm=null}},{passive:true});
