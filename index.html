@@ -151,7 +151,7 @@ b+=`<h2>Conversations privées</h2>`+(ms.map(u=>`<button class="row" data-id="${
 return b}
 function lockMsg(){sheet('Accès réservé','<p>Vous ne pouvez pas entrer dans cette conversation.</p>')}
 const MSEL='*,profiles!messages_user_id_fkey(name,avatar),message_reads(user_id,read_at),poll_votes(user_id,option)',IMGU={},PV={},MI={},tp=p=>p.replace(/\.jpg$/,'_t.jpg');
-async function fetchMsgs(){let q=sb.from('messages').select(MSEL).eq('channel',cur);if(cur=='prive')q=q.eq('thread',TH);const{data,error}=await q.order('created_at').limit(200),l=data||[];
+async function fetchMsgs(){let q=sb.from('messages').select(MSEL).eq('channel',cur);if(cur=='prive')q=q.eq('thread',TH);const{data,error}=await q.order('created_at',{ascending:false}).limit(80),l=(data||[]).reverse();
 const un=l.filter(m=>m.user_id!=me.id&&!(m.message_reads||[]).some(r=>r.user_id==me.id));
 if(un.length)await sb.from('message_reads').upsert(un.map(m=>({message_id:m.id,user_id:me.id})),{onConflict:'message_id,user_id',ignoreDuplicates:true});
 const need=[];l.forEach(m=>{if(m.image){const p=tp(m.image);if(!IMGU[p]||IMGU[p].t<Date.now())need.push(p)}});
@@ -208,8 +208,9 @@ const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=nm
 let tk=0,EP=null;
 async function ep(){try{const s=await(await navigator.serviceWorker.ready).pushManager.getSubscription();EP=s?s.endpoint:null}catch(e){EP=null}}
 function beat(on){if(!EP||!me||me.status!='valide')return;sb.from('push_subs').update({active_at:on?new Date().toISOString():null}).eq('endpoint',EP).then(()=>{})}
-function live(){if(!window.pt){ep().then(()=>beat(1));window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tk%3==0)beat(1);if(tk%4==0)chk();if(tab=='msg'||tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(document.hidden)beat(0);else{beat(1);rt()}})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
-async function rt(){if(!me||me.status!='valide')return;if(tab=='msg'){cur?refreshChat():draw()}else updateBadge()}
+function live(){if(!window.pt){ep().then(()=>beat(1));window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tk%3==0)beat(1);if(tk%4==0)chk();if(tab=='msg'?(cur?tk%2==0:tk%3==0):tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(document.hidden)beat(0);else{beat(1);rt()}})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
+function rt(){clearTimeout(window.RTT);window.RTT=setTimeout(rt0,1000)}
+async function rt0(){if(!me||me.status!='valide')return;if(tab=='msg'){cur?refreshChat():draw()}else updateBadge()}
 let fo=null,it=null,AU={},GR={};const FN={},SU={};
 const nv=t=>`tab='${t}';fo=null;it=null;cur=null;draw()`,rw=(t,l,d='')=>`<button class="row" onclick="${nv(t)}"><b>${l}</b><span class="m">${d}</span></button>`;
 const canEdit=sp=>sp=='bureau'?me.role!='membre':me.role=='cheffe',BK='melodiam';
