@@ -208,9 +208,10 @@ if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.shar
 const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=nm;document.body.appendChild(a);a.click();a.remove()}catch(e){window.open(LBP,'_blank')}}
 let tk=0,EP=null;
 async function ep(){try{const s=await(await navigator.serviceWorker.ready).pushManager.getSubscription();EP=s?s.endpoint:null}catch(e){EP=null}}
+function clearBadge(){try{navigator.clearAppBadge&&navigator.clearAppBadge()}catch(e){}try{caches.open('badge').then(c=>c.put('/badge-n',new Response('0')))}catch(e){}try{navigator.serviceWorker.ready.then(r=>r.getNotifications().then(l=>l.forEach(n=>n.close())))}catch(e){}}
 function pbeat(){if(!me||me.role=='cheffe'||me.status!='valide'||document.hidden)return;sb.from('presence').upsert({user_id:me.id,seen_at:new Date().toISOString()}).then(()=>{})}
 function beat(on){if(!EP||!me||me.status!='valide')return;sb.from('push_subs').update({active_at:on?new Date().toISOString():null}).eq('endpoint',EP).then(()=>{})}
-function live(){if(!window.pt){ep().then(()=>beat(1));pbeat();window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tk%3==0){beat(1);pbeat()}if(tk%4==0)chk();if(tab=='msg'?(cur?tk%2==0:tk%3==0):tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(document.hidden)beat(0);else{beat(1);pbeat();rt()}})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
+function live(){if(!window.pt){ep().then(()=>beat(1));pbeat();clearBadge();window.pt=setInterval(()=>{if(document.hidden)return;tk++;if(tk%3==0){beat(1);pbeat()}if(tk%4==0)chk();if(tab=='msg'?(cur?tk%2==0:tk%3==0):tk%4==0)rt()},4000);document.addEventListener('visibilitychange',()=>{if(document.hidden)beat(0);else{beat(1);pbeat();clearBadge();rt()}})}sb.channel('live').on('postgres_changes',{event:'*',schema:'public',table:'messages'},rt).on('postgres_changes',{event:'*',schema:'public',table:'message_reads'},rt).subscribe()}
 function rt(){clearTimeout(window.RTT);window.RTT=setTimeout(rt0,1000)}
 async function rt0(){if(!me||me.status!='valide')return;if(tab=='msg'){cur?refreshChat():draw()}else updateBadge()}
 let fo=null,it=null,AU={},GR={};const FN={},SU={};
