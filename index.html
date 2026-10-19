@@ -259,11 +259,11 @@ async function savePos(a){NL=a.slice();const rs=await Promise.all(a.map((n,k)=>s
 (function(){let D=null,T=null,sy=0,sx=0,asc=0;
 const lst=()=>document.getElementById('pl');
 function begin(el,y){D={el,gy:y-el.getBoundingClientRect().top};el.classList.add('drag');try{navigator.vibrate&&navigator.vibrate(15)}catch(x){}
-clearInterval(asc);asc=setInterval(()=>{if(!D)return;if(D.y<90)scrollBy(0,-12);else if(D.y>innerHeight-90)scrollBy(0,12);if(D.y!=null)place()},16)}
-function place(){const el=D.el,L=lst();if(!L)return;el.style.transform='';const top=el.getBoundingClientRect().top;
-const ds=[...L.children].filter(c=>c!==el);
-for(const c of ds){const r=c.getBoundingClientRect(),mid=r.top+r.height/2,ct=D.y-D.gy+el.offsetHeight/2;
-if(c.compareDocumentPosition(el)&4){if(ct>mid){c.after(el)}}else{if(ct<mid){c.before(el)}}}
+clearInterval(asc);asc=setInterval(()=>{if(!D)return;if(D.y<60)scrollBy(0,-10);else if(D.y>innerHeight-60)scrollBy(0,10);if(D.y!=null)place()},16)}
+function place(){const el=D.el,L=lst();if(!L)return;el.style.transform='';const ds=[...L.children].filter(c=>c!==el);
+const cur=[...L.children].indexOf(el),ct=D.y-D.gy+el.offsetHeight/2;let k=0;
+ds.forEach((c,j)=>{const r=c.getBoundingClientRect(),m=r.top+r.height/2;if(j<cur?ct>=m:ct>m)k++});
+if(cur!=k){if(k>=ds.length)L.appendChild(el);else L.insertBefore(el,ds[k])}
 el.style.transform='';const t2=el.getBoundingClientRect().top;el.style.transform='translateY('+(D.y-D.gy-t2)+'px)'}
 function end(ok){clearTimeout(T);clearInterval(asc);if(!D){return}const el=D.el;D=null;el.style.transform='';el.classList.remove('drag');
 const a=[...lst().children].map(c=>c.dataset.n);if(ok&&a.join('\u0001')!=NL.join('\u0001'))savePos(a)}
