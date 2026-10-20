@@ -104,17 +104,18 @@ else if(r.error){try{const c=JSON.parse(localStorage.getItem('mel_me')||'null');
 else if(++BT>4){BT=0;try{await sb.auth.signOut({scope:'local'})}catch(e){}try{localStorage.removeItem('mel_me')}catch(e){}sb.removeAllChannels();window.lv=0}
 else loading=true}
 if(me&&me.status=='valide'&&!window.lv){window.lv=1;live()}draw();if(loading)setTimeout(boot,1500)}
-async function draw(){clearInterval(timer);const a=$('#app'),n=$('#nav');n.innerHTML='';document.body.classList.toggle('plain',tab=='msg'&&!!me&&me.status=='valide');document.body.classList.toggle('chat',tab=='msg'&&!!cur&&!!me&&me.status=='valide');
-if(loading){a.innerHTML=hd('Chargement…');return}
-if(!me){a.innerHTML=hd('Bienvenue ✨')+auth();return}
-if(me.status=='en_attente'){a.innerHTML=hd('Demande envoyée')+`<div class="c g"><p>Merci ${esc(first())} ! Votre demande (pupitre : ${esc(me.pupitre)}) attend la validation de la cheffe. Cette page se met à jour toute seule.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;timer=setInterval(boot,10000);return}
-if(me.status=='refuse'){a.innerHTML=hd('Accès refusé')+`<div class="c"><p>Votre demande n’a pas été acceptée. Contactez la cheffe pour plus d’informations.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;return}
+async function draw(){clearInterval(timer);const a=$('#app'),n=$('#nav'),nc=()=>{n.innerHTML='';n.dataset.h=''};document.body.classList.toggle('plain',tab=='msg'&&!!me&&me.status=='valide');document.body.classList.toggle('chat',tab=='msg'&&!!cur&&!!me&&me.status=='valide');
+if(loading){nc();a.innerHTML=hd('Chargement…');return}
+if(!me){nc();a.innerHTML=hd('Bienvenue ✨')+auth();return}
+if(me.status=='en_attente'){nc();a.innerHTML=hd('Demande envoyée')+`<div class="c g"><p>Merci ${esc(first())} ! Votre demande (pupitre : ${esc(me.pupitre)}) attend la validation de la cheffe. Cette page se met à jour toute seule.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;timer=setInterval(boot,10000);return}
+if(me.status=='refuse'){nc();a.innerHTML=hd('Accès refusé')+`<div class="c"><p>Votre demande n’a pas été acceptée. Contactez la cheffe pour plus d’informations.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;return}
 let np=0;if(me.role=='cheffe'){const r=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('status','en_attente');np=r.count||0}
 const bg=np?`<em class="bd">${np}</em>`:'';
 window.NP=np;const tb=(t,i,l,ex='',on)=>`<button class="${(on===undefined?tab==t:on)?'on':''}" onclick="${nv(t)}"><b>${i}</b>${l}${ex}</button>`;
-n.innerHTML=tb('home','⌂','Accueil')+tb('ag','▦','Agenda')+tb('rep','♫','Partitions')+tb('msg','✉','Messages','<em class="bd" id="mb" style="display:none"></em>')+tb('plus','⋯','Plus',bg,['plus','dem','bu','ch','pres','mem','me'].includes(tab));
+const nh=tb('home','⌂','Accueil')+tb('ag','▦','Agenda')+tb('rep','♫','Partitions')+tb('msg','✉','Messages','<em class="bd" id="mb" style="display:none"></em>')+tb('plus','⋯','Plus',bg,['plus','dem','bu','ch','pres','mem','me'].includes(tab));
+if(n.dataset.h!==nh){n.innerHTML=nh;n.dataset.h=nh}
 if(tab!='msg')updateBadge();
-if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM;a.innerHTML=await msgs();window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();return}
+if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM,hh=await msgs();if(!(was&&!cur&&window.LH===hh))a.innerHTML=hh;window.LH=cur?null:hh;window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();return}
 if((tab=='bu'&&me.role=='membre')||((tab=='ch'||tab=='pres')&&me.role!='cheffe')){a.innerHTML=hd(tab=='bu'?'Espace bureau':'Espace cheffe')+'<div class="c g"><b>Accès réservé</b><p>Vous ne pouvez pas entrer dans cette zone.</p></div>';return}
 if(tab=='rep'){a.innerHTML=await folders('repertoire','Répertoire');if(RD){const r=RD;RD=null;openReader(r)}return}
 if(tab=='bu'){a.innerHTML=await folders('bureau','Espace bureau');return}
@@ -198,7 +199,7 @@ else if(m.image){const t=IMGU[tp(m.image)];body=t?`<img class="ph" src="${t.u}" 
 else body=lk(esc(m.body)).replace(/\n/g,'<br>');
 return `<div class="b ${mine?'me':''}" data-id="${m.id}">${mine?'':`<div class="who">${av((m.profiles||{}).name,(m.profiles||{}).avatar,26,m.user_id)}<i>${esc(fn(m.profiles))}</i></div>`}${body}${rxh(m)}<small>${hm(m.created_at)} ${mine?`<span class="${rd?'rd':''}">${rd?'✓✓':'✓'}</span> `:''}${mine||me.role=='cheffe'?`<a href="#" onclick="showReaders(${m.id});return false">Infos</a> · <a href="#" onclick="dm(${m.id});return false">Effacer</a>`:''}</small></div>`}).join('')||'<p class="m">Aucun message.</p>');
 async function refreshChat(f){const el=$('#ml');if(tab!='msg'||!cur||!el)return;const[{l}]=await Promise.all([fetchMsgs(),loadOnl()]);
-const sig=(me.role=='cheffe'?[...ONL].map(x=>x.slice(0,4)).join('')+'|':'')+l.map(m=>m.id+':'+(m.message_reads||[]).length+':'+(m.poll_votes||[]).map(v=>v.user_id.slice(0,6)+v.option).join('.')+':'+(m.message_reactions||[]).map(r=>r.user_id.slice(0,4)+r.emoji).join('')).join(',');if(!f&&el.dataset.s===sig)return;el.dataset.s=sig;
+onlPaint();const sig=l.map(m=>m.id+':'+(m.message_reads||[]).length+':'+(m.poll_votes||[]).map(v=>v.user_id.slice(0,6)+v.option).join('.')+':'+(m.message_reactions||[]).map(r=>r.user_id.slice(0,4)+r.emoji).join('')).join(',');if(!f&&el.dataset.s===sig)return;el.dataset.s=sig;
 const near=innerHeight+scrollY>=document.body.scrollHeight-160;el.innerHTML=bubbles(l);vui();if(near)scrollTo(0,1e5);updateBadge()}
 async function send(){const x=V('mx');if(!x)return;$('#mx').value='';$('#mx').style.height='auto';await sb.from('messages').insert({channel:cur,body:x,...thr()});await refreshChat();scrollTo(0,1e5);const i=$('#mx');if(i)i.focus()}
 async function dm(id){const{data}=await sb.from('messages').select('image').eq('id',id).maybeSingle();if(data&&data.image)await sb.storage.from('chat').remove([data.image,tp(data.image)]);await sb.from('messages').delete().eq('id',id);draw()}
@@ -380,8 +381,9 @@ const reg=await navigator.serviceWorker.ready,s=await reg.pushManager.getSubscri
 const r=await sb.from('push_subs').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,user_id:me.id});if(r.error)throw r.error;EP=j.endpoint;window.NS='ok';beat(1);m.textContent='✓ Notifications activées sur cet appareil.'}catch(e){m.textContent=e.message||String(e)}}
 const AVU=p=>p?sb.storage.from('avatars').getPublicUrl(p).data.publicUrl:'';
 let ONL=new Set();
+function onlPaint(){document.querySelectorAll('.av[data-u]').forEach(e=>e.classList.toggle('on',ONL.has(e.dataset.u)))}
 async function loadOnl(){if(!me||me.role!='cheffe')return;try{const r=await sb.from('presence').select('user_id,seen_at');if(r.data)ONL=new Set(r.data.filter(x=>Date.now()-new Date(x.seen_at)<45000).map(x=>x.user_id))}catch(e){}}
-const av=(n,p,s,u)=>`<span class="av${u&&ONL.has(u)?' on':''}" style="width:${s}px;height:${s}px;font-size:${Math.round(s*.42)}px">${p?`<img src="${AVU(p)}" alt="" loading="lazy">`:esc((n||'?').trim().charAt(0).toUpperCase())}</span>`;
+const av=(n,p,s,u)=>`<span class="av${u&&ONL.has(u)?' on':''}"${u?` data-u="${u}"`:''} style="width:${s}px;height:${s}px;font-size:${Math.round(s*.42)}px">${p?`<img src="${AVU(p)}" alt="" loading="lazy">`:esc((n||'?').trim().charAt(0).toUpperCase())}</span>`;
 function avZoom(src){let o=$('#al');if(!o){o=document.createElement('div');o.id='al';o.className='ov';o.hidden=true;o.innerHTML='<button class="x" aria-label="Fermer" onclick="avClose()">✕</button><img alt="Photo de profil">';o.addEventListener('click',e=>{if(e.target===o)avClose()});document.body.appendChild(o)}
 o.querySelector('img').src=src;o.hidden=false;document.body.style.overflow='hidden'}
 function avClose(){const o=$('#al');if(o)o.hidden=true;document.body.style.overflow=''}
