@@ -105,7 +105,9 @@ else if(r.error){try{const c=JSON.parse(localStorage.getItem('mel_me')||'null');
 else if(++BT>4){BT=0;try{await sb.auth.signOut({scope:'local'})}catch(e){}try{localStorage.removeItem('mel_me')}catch(e){}sb.removeAllChannels();window.lv=0}
 else loading=true}
 if(me&&me.status=='valide'&&!window.lv){window.lv=1;live()}await draw();if(!loading){hideSplash();setTimeout(()=>loadPdf().catch(()=>{}),4000)}if(loading)setTimeout(boot,1500)}
-async function draw(){clearInterval(timer);const a=$('#app'),n=$('#nav'),nc=()=>{n.innerHTML='';n.dataset.h=''};document.body.classList.toggle('plain',tab=='msg'&&!!me&&me.status=='valide');document.body.classList.toggle('chat',tab=='msg'&&!!cur&&!!me&&me.status=='valide');
+let DRB=false,DRQ=false,DRN=0;
+async function draw(){DRN++;if(DRB){DRQ=true;return}DRB=true;try{do{DRQ=false;await drawNow()}while(DRQ)}catch(e){console.error(e)}finally{DRB=false}}
+async function drawNow(){const my=DRN;clearInterval(timer);const a=$('#app'),n=$('#nav'),nc=()=>{n.innerHTML='';n.dataset.h=''};if(!(tab=='msg'&&!cur))a.dataset.v='';document.body.classList.toggle('plain',tab=='msg'&&!!me&&me.status=='valide');document.body.classList.toggle('chat',tab=='msg'&&!!cur&&!!me&&me.status=='valide');
 if(loading){nc();a.innerHTML=hd('Chargement…');return}
 if(!me){nc();a.innerHTML=hd('Bienvenue ✨')+auth();return}
 if(me.status=='en_attente'){nc();a.innerHTML=hd('Demande envoyée')+`<div class="c g"><p>Merci ${esc(first())} ! Votre demande (pupitre : ${esc(me.pupitre)}) attend la validation de la cheffe. Cette page se met à jour toute seule.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;timer=setInterval(boot,10000);return}
@@ -116,7 +118,7 @@ window.NP=np;const tb=(t,i,l,ex='',on)=>`<button class="${(on===undefined?tab==t
 const nh=tb('home','⌂','Accueil')+tb('ag','▦','Agenda')+tb('rep','♫','Partitions')+tb('msg','✉','Messages','<em class="bd" id="mb" style="display:none"></em>')+tb('plus','⋯','Plus',bg,['plus','dem','bu','ch','pres','mem','me'].includes(tab));
 if(n.dataset.h!==nh){n.innerHTML=nh;n.dataset.h=nh}
 if(tab!='msg')updateBadge();
-if(tab!='msg'||!cur)tyLeave();if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM,hh=await msgs();if(!(was&&!cur&&window.LH===hh))a.innerHTML=hh;window.LH=cur?null:hh;window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();if(cur){backBadge();tyJoin()}return}
+if(tab!='msg'||!cur)tyLeave();if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM,hh=await msgs();if(my!=DRN)return;if(!(was&&!cur&&window.LH===hh&&a.dataset.v=='ml'))a.innerHTML=hh;a.dataset.v=cur?'':'ml';window.LH=cur?null:hh;window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();if(cur){backBadge();tyJoin()}return}
 if((tab=='bu'&&me.role=='membre')||((tab=='ch'||tab=='pres')&&me.role!='cheffe')){a.innerHTML=hd(tab=='bu'?'Espace bureau':'Espace cheffe')+'<div class="c g"><b>Accès réservé</b><p>Vous ne pouvez pas entrer dans cette zone.</p></div>';return}
 if(tab=='rep'){a.innerHTML=await folders('repertoire','Répertoire');if(RD){const r=RD;RD=null;openReader(r)}return}
 if(tab=='bu'){a.innerHTML=await folders('bureau','Espace bureau');return}
