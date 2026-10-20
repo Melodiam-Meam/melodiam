@@ -72,6 +72,7 @@ body.plain::before{background:#0b0f1f}
 .rb{width:42px;height:42px;min-width:42px;min-height:42px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font-size:1.6rem;line-height:1}
 .rb.pl{background:transparent;color:var(--gold);border:1.5px solid var(--gold)}
 .rb.mic{background:transparent;color:var(--gold);border:1.5px solid var(--gold);font-size:1.15rem}.vm{display:flex;align-items:center;gap:10px;min-width:200px}.vp{width:38px;height:38px;min-width:38px;border-radius:50%;padding:0;flex:none;background:var(--gold);color:#1a1410;border:none;font-size:1rem;line-height:1}.vb{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.2);cursor:pointer}.vb i{display:block;height:100%;width:0;background:var(--gold);border-radius:4px}.vt{font-size:.8rem;opacity:.85;min-width:34px;text-align:right}.rdot{color:#e5484d;animation:bk 1s infinite}@keyframes bk{50%{opacity:.2}}
+.lt{font-size:.8rem;font-style:italic;font-weight:400;color:var(--gold)}.lt:empty{display:none}
 .ty{min-height:26px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:2px 4px 4px}.tyg{display:inline-flex;align-items:center;gap:6px}.tyav{display:inline-flex;margin-right:-10px}.tyav:last-of-type{margin-right:0}.tyt{font-size:.82rem;color:var(--mut,#b8b0a0);font-style:italic;margin-left:8px}.dts i{font-style:normal;animation:dt 1.2s infinite;opacity:.2}.dts i:nth-child(2){animation-delay:.2s}.dts i:nth-child(3){animation-delay:.4s}@keyframes dt{40%{opacity:1}}
 .rb.snd{background:var(--gold);color:#1a1410;border:none}
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:30;display:flex;flex-direction:column}#lb[hidden]{display:none}
@@ -118,7 +119,7 @@ window.NP=np;const tb=(t,i,l,ex='',on)=>`<button class="${(on===undefined?tab==t
 const nh=tb('home','⌂','Accueil')+tb('ag','▦','Agenda')+tb('rep','♫','Partitions')+tb('msg','✉','Messages','<em class="bd" id="mb" style="display:none"></em>')+tb('plus','⋯','Plus',bg,['plus','dem','bu','ch','pres','mem','me'].includes(tab));
 if(n.dataset.h!==nh){n.innerHTML=nh;n.dataset.h=nh}
 if(tab!='msg')updateBadge();
-if(tab!='msg'||!cur)tyLeave();if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM,hh=await msgs();if(my!=DRN)return;if(!(was&&!cur&&window.LH===hh&&a.dataset.v=='ml'))a.innerHTML=hh;a.dataset.v=cur?'':'ml';window.LH=cur?null:hh;window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();if(cur){backBadge();tyJoin()}return}
+if(tab!='msg'||!cur)tyLeave();if(tab!='msg'||cur)lrLeave();if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM,hh=await msgs();if(my!=DRN)return;if(!(was&&!cur&&window.LH===hh&&a.dataset.v=='ml'))a.innerHTML=hh;a.dataset.v=cur?'':'ml';window.LH=cur?null:hh;window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();if(cur){backBadge();tyJoin()}else{lrJoin();lrDraw()}return}
 if((tab=='bu'&&me.role=='membre')||((tab=='ch'||tab=='pres')&&me.role!='cheffe')){a.innerHTML=hd(tab=='bu'?'Espace bureau':'Espace cheffe')+'<div class="c g"><b>Accès réservé</b><p>Vous ne pouvez pas entrer dans cette zone.</p></div>';return}
 if(tab=='rep'){a.innerHTML=await folders('repertoire','Répertoire');if(RD){const r=RD;RD=null;openReader(r)}return}
 if(tab=='bu'){a.innerHTML=await folders('bureau','Espace bureau');return}
@@ -176,10 +177,10 @@ async function backBadge(){if(!me||tab!='msg'||!cur)return;const U=await unread(
 async function updateBadge(){if(!me)return;const U=await unread(),t=Object.values(U).reduce((a,b)=>a+b,0),e=document.getElementById('mb');if(e){e.textContent=t;e.style.display=t?'inline-block':'none'}}
 let TH=null;const thr=()=>cur=='prive'?{thread:TH}:{};
 async function msgList(){const U=await unread();await loadMem();const cf=MEM.find(u=>u.role=='cheffe'),nm=cf?fn(cf):'la cheffe',bd=n=>n?`<em class="bd">${n}</em>`:'';let b=hd('Messages');
-if(me.role!='cheffe')b+=`<button class="row" onclick="cur='prive';TH='${me.id}';draw()"><b>✉ Écrire à ${esc(nm)} en privé</b>${bd(U['prive:'+me.id])}</button>`;
+if(me.role!='cheffe')b+=`<button class="row" onclick="cur='prive';TH='${me.id}';draw()"><span style="display:flex;flex-direction:column;align-items:flex-start;gap:2px"><b>✉ Écrire à ${esc(nm)} en privé</b><em class="lt" data-u="${cf?cf.id:''}"></em></span>${bd(U['prive:'+me.id])}</button>`;
 b+=[...CH.filter(c=>canR(c[0])),...CH.filter(c=>!canR(c[0]))].map(c=>canR(c[0])?`<button class="row" onclick="cur='${c[0]}';draw()"><b>${c[1]}</b>${bd(U[c[0]])}</button>`:`<button class="row lk" onclick="lockMsg()"><b>🔒 ${c[1]}</b><span class="m">Accès réservé</span></button>`).join('');
 if(me.role=='cheffe'){await loadOnl();clearTimeout(window.OT);window.OT=setTimeout(()=>{if(tab=='msg'&&!cur&&me&&me.role=='cheffe')draw()},15000);const LT={};((await sb.from('messages').select('thread,created_at').eq('channel','prive').order('created_at',{ascending:false}).limit(600)).data||[]).forEach(m=>{if(m.thread&&!LT[m.thread])LT[m.thread]=m.created_at});const ms=MEM.filter(u=>u.role!='cheffe').sort((a,c)=>(LT[c.id]||'').localeCompare(LT[a.id]||'')||a.name.localeCompare(c.name));
-b+=`<h2>Conversations privées</h2>`+(ms.map(u=>`<button class="row" data-id="${u.id}" onclick="cur='prive';TH=this.dataset.id;draw()"><span style="display:flex;align-items:center;gap:10px">${av(u.name,u.avatar,34,u.id)}<b>${esc(u.name)}</b></span>${U['prive:'+u.id]?bd(U['prive:'+u.id]):`<span class="m">${esc(u.pupitre)}</span>`}</button>`).join('')||'<div class="c m">Aucun membre inscrit.</div>')}
+b+=`<h2>Conversations privées</h2>`+(ms.map(u=>`<button class="row" data-id="${u.id}" onclick="cur='prive';TH=this.dataset.id;draw()"><span style="display:flex;align-items:center;gap:10px">${av(u.name,u.avatar,34,u.id)}<span style="display:flex;flex-direction:column;align-items:flex-start;gap:2px"><b>${esc(u.name)}</b><em class="lt" data-u="${u.id}"></em></span></span>${U['prive:'+u.id]?bd(U['prive:'+u.id]):`<span class="m">${esc(u.pupitre)}</span>`}</button>`).join('')||'<div class="c m">Aucun membre inscrit.</div>')}
 return b}
 function lockMsg(){sheet('Accès réservé','<p>Vous ne pouvez pas entrer dans cette conversation.</p>')}
 const MSEL='*,profiles!messages_user_id_fkey(name,first_name,avatar),message_reads(user_id,read_at),poll_votes(user_id,option),message_reactions(user_id,emoji)',IMGU={},PV={},MI={},tp=p=>p.replace(/\.jpg$/,'_t.jpg');
@@ -209,18 +210,24 @@ const near=innerHeight+scrollY>=document.body.scrollHeight-160;el.innerHTML=bubb
 async function send(){const x=V('mx');if(!x)return;tyPing('x',1);$('#mx').value='';$('#mx').style.height='auto';await sb.from('messages').insert({channel:cur,body:x,...thr()});await refreshChat();scrollTo(0,1e5);const i=$('#mx');if(i)i.focus()}
 async function dm(id){if(!confirm('Effacer ce message pour tout le monde ?'))return;const{data}=await sb.from('messages').select('image').eq('id',id).maybeSingle();if(data&&data.image)await sb.storage.from('chat').remove([data.image,tp(data.image)]);const r=await sb.from('messages').update({kind:'deleted',body:'',image:null,poll:null}).eq('id',id);if(r.error)return alert(r.error.message);if(cur)refreshChat(1);else draw()}
 const vfmt=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
-let TYC=null,TYK=null,TYR=false,TY={},TYI=null,TYL={};
+let TYC=null,TYK=null,TYR=false,TY={},TYI=null,TYL={},TYO=null,TYOR=false,LRC=null,LRI=null,LRQ={};
 function tyKey(){return cur=='prive'?'prive-'+TH:cur}
 function tyJoin(){if(!cur||!me)return;const k=tyKey();if(TYK===k&&TYC)return;tyLeave();TYK=k;TY={};
 try{TYC=sb.channel('ty-'+k,{config:{broadcast:{self:false}}});TYC.on('broadcast',{event:'ty'},m=>{const p=m.payload||{};if(!p.u||p.u==me.id)return;if(p.k=='x')delete TY[p.u];else TY[p.u]={k:p.k,t:Date.now()+(p.k=='v'?6000:4500)};tyDraw()}).subscribe(s=>{TYR=s==='SUBSCRIBED'})}catch(e){TYC=null}
+if(cur=='prive'){try{TYO=sb.channel(me.role=='cheffe'?'ty-pv-'+TH:'ty-inbox',{config:{broadcast:{self:false}}});TYO.subscribe(s=>{TYOR=s==='SUBSCRIBED'})}catch(e){TYO=null}}
 clearInterval(TYI);TYI=setInterval(tyDraw,1000)}
-function tyLeave(){clearInterval(TYI);TYI=null;if(TYC){try{sb.removeChannel(TYC)}catch(e){}}TYC=null;TYK=null;TYR=false;TY={};TYL={}}
+function tyLeave(){clearInterval(TYI);TYI=null;if(TYC){try{sb.removeChannel(TYC)}catch(e){}}TYC=null;TYK=null;TYR=false;TY={};TYL={};if(TYO){try{sb.removeChannel(TYO)}catch(e){}}TYO=null;TYOR=false}
 function tyPing(k,force){if(!TYC||!TYR||!me)return;const n=Date.now();if(!force&&k!='x'&&TYL[k]&&n-TYL[k]<2500)return;if(k=='x'&&!force&&!TYL.t&&!TYL.v)return;TYL[k]=n;if(k=='x'){TYL={}}
-try{TYC.send({type:'broadcast',event:'ty',payload:{u:me.id,k}})}catch(e){}}
+try{TYC.send({type:'broadcast',event:'ty',payload:{u:me.id,k}})}catch(e){}if(TYO&&TYOR)try{TYO.send({type:'broadcast',event:'ty',payload:{u:me.id,k}})}catch(e){}}
 function tyDraw(){const el=document.getElementById('ty');if(!el||!cur){return}const n=Date.now();let ch=false;for(const u in TY)if(TY[u].t<n){delete TY[u];ch=true}
 const grp=k=>Object.keys(TY).filter(u=>TY[u].k==k),mk=(ids,one,many)=>{if(!ids.length)return'';const sh=ids.slice(0,3).map(u=>{const p=(MEM||[]).find(x=>x.id==u)||{};return `<span class="tyav">${av(p.name,p.avatar,22,u)}</span>`}).join('');return `<span class="tyg">${sh}${ids.length>3?`<em class="m">+${ids.length-3}</em>`:''}<span class="tyt">${ids.length>1?many:one}<span class="dts"><i>.</i><i>.</i><i>.</i></span></span></span>`};
 const html=mk(grp('t'),'écrit','écrivent')+mk(grp('v'),'enregistre un vocal','enregistrent un vocal');
 if(el.dataset.h===html)return;el.dataset.h=html;el.innerHTML=html;if(html&&innerHeight+scrollY>=document.body.scrollHeight-200)scrollTo(0,1e5)}
+function lrJoin(){if(LRC||!me)return;try{LRC=sb.channel(me.role=='cheffe'?'ty-inbox':'ty-pv-'+me.id,{config:{broadcast:{self:false}}});LRC.on('broadcast',{event:'ty'},m=>{const p=m.payload||{};if(!p.u||p.u==me.id)return;if(p.k=='x')delete LRQ[p.u];else LRQ[p.u]={k:p.k,t:Date.now()+(p.k=='v'?6000:4500)};lrDraw()}).subscribe()}catch(e){LRC=null}
+clearInterval(LRI);LRI=setInterval(lrDraw,1000);lrDraw()}
+function lrLeave(){clearInterval(LRI);LRI=null;if(LRC){try{sb.removeChannel(LRC)}catch(e){}}LRC=null;LRQ={}}
+function lrDraw(){const n=Date.now();for(const u in LRQ)if(LRQ[u].t<n)delete LRQ[u];
+document.querySelectorAll('.lt[data-u]').forEach(el=>{const q=LRQ[el.dataset.u];let t='';if(q){const p=(MEM||[]).find(x=>x.id==el.dataset.u)||{};t=(typeof fn=='function'&&p.id?fn(p):'')+(q.k=='v'?' enregistre un vocal…':' écrit…')}if(el.textContent!==t)el.textContent=t})}
 let VR=null,VA=null,VS=null,VT=null;
 function micFree(){clearTimeout(VT);if(VS){try{VS.getTracks().forEach(t=>t.stop())}catch(e){}VS=null}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!VR)micFree()});
