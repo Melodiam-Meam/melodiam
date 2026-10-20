@@ -32,7 +32,12 @@ nav button{flex:1;background:none;color:var(--mut);font-size:.72rem;padding:4px 
 #rb button[hidden]{display:none}
 #rb button{padding:6px 12px;min-height:36px;color:#fff;border-color:#fff8}
 #rc{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px)}
-.av{display:inline-grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#1556b8,#0c2147);color:#fff;font-family:sans-serif;font-weight:700;line-height:1;overflow:hidden;flex:none;border:1.5px solid var(--gold)}.av.on{border-color:#4cd37b;box-shadow:0 0 0 2.5px #4cd37b,0 0 10px rgba(76,211,123,.6)}
+.av{display:inline-grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#1556b8,#0c2147);color:#fff;font-family:sans-serif;font-weight:700;line-height:1;overflow:hidden;flex:none;border:1.5px solid var(--gold)}.ov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;touch-action:none}.ov[hidden]{display:none}
+.ov .x{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:16px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:1.5rem;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+#al img{max-width:92vw;max-height:78vh;border-radius:18px;border:2px solid var(--gold);object-fit:contain;background:#000}
+#crv{position:relative;width:min(300px,80vw);height:min(300px,80vw);overflow:hidden;border-radius:50%;border:2px solid var(--gold);background:#000;touch-action:none;cursor:grab}#crv canvas{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none}
+#crz{width:min(300px,80vw)}
+.av.on{border-color:#4cd37b;box-shadow:0 0 0 2.5px #4cd37b,0 0 10px rgba(76,211,123,.6)}
 .av img{width:100%;height:100%;object-fit:cover;display:block}
 .who{display:flex;align-items:center;gap:6px;margin-bottom:3px}.who i{margin:0}
 
@@ -364,9 +369,31 @@ const AVU=p=>p?sb.storage.from('avatars').getPublicUrl(p).data.publicUrl:'';
 let ONL=new Set();
 async function loadOnl(){if(!me||me.role!='cheffe')return;try{const r=await sb.from('presence').select('user_id,seen_at');if(r.data)ONL=new Set(r.data.filter(x=>Date.now()-new Date(x.seen_at)<45000).map(x=>x.user_id))}catch(e){}}
 const av=(n,p,s,u)=>`<span class="av${u&&ONL.has(u)?' on':''}" style="width:${s}px;height:${s}px;font-size:${Math.round(s*.42)}px">${p?`<img src="${AVU(p)}" alt="" loading="lazy">`:esc((n||'?').trim().charAt(0).toUpperCase())}</span>`;
-async function setPhoto(inp){const f=inp.files[0],m=$('#pe');if(!f)return;try{m.textContent='Envoi en cours…';const bm=await createImageBitmap(f),z=Math.min(bm.width,bm.height),c=document.createElement('canvas');c.width=c.height=256;c.getContext('2d').drawImage(bm,(bm.width-z)/2,(bm.height-z)/2,z,z,0,0,256,256);
-const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85)),path=`${me.id}/${Date.now()}.jpg`,u=await sb.storage.from('avatars').upload(path,blob,{contentType:'image/jpeg'});if(u.error)throw u.error;
-const r=await sb.from('profiles').update({avatar:path}).eq('id',me.id);if(r.error)throw r.error;if(me.avatar)await sb.storage.from('avatars').remove([me.avatar]);me.avatar=path;draw()}catch(e){m.textContent=e.message||'Impossible d’envoyer cette photo.'}}
+function avZoom(src){let o=$('#al');if(!o){o=document.createElement('div');o.id='al';o.className='ov';o.hidden=true;o.innerHTML='<button class="x" aria-label="Fermer" onclick="avClose()">✕</button><img alt="Photo de profil">';o.addEventListener('click',e=>{if(e.target===o)avClose()});document.body.appendChild(o)}
+o.querySelector('img').src=src;o.hidden=false;document.body.style.overflow='hidden'}
+function avClose(){const o=$('#al');if(o)o.hidden=true;document.body.style.overflow=''}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('.av');if(!a||a.closest('button'))return;const im=a.querySelector('img');if(im&&im.src)avZoom(im.src)});
+document.addEventListener('keydown',e=>{if(e.key=='Escape')avClose()});
+let CR=null;
+async function setPhoto(inp){const f=inp.files[0],m=$('#pe');inp.value='';if(!f)return;try{const bm=await createImageBitmap(f),k=Math.min(1,1600/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);cropOpen(c)}catch(e){if(m)m.textContent='Impossible de lire cette photo.'}}
+function cropOpen(c){let o=$('#cr');if(o)o.remove();o=document.createElement('div');o.id='cr';o.className='ov';
+o.innerHTML='<p style="color:#fff;text-align:center;margin:0">Déplacez et zoomez pour recadrer votre photo</p><div id="crv"></div><input id="crz" type="range" min="1" max="4" step="0.01" value="1" aria-label="Zoom"><div class="r" style="justify-content:center"><button class="o" onclick="cropClose()">Annuler</button><button onclick="cropOk()">Valider</button></div>';
+document.body.appendChild(o);document.body.style.overflow='hidden';const v=$('#crv');v.appendChild(c);const V=v.clientWidth,min=Math.max(V/c.width,V/c.height);
+CR={c,V,min,s:min,x:(V-c.width*min)/2,y:(V-c.height*min)/2,p:new Map()};
+const fit=()=>{const R=CR;R.s=Math.max(R.min,Math.min(R.min*4,R.s));R.x=Math.min(0,Math.max(R.V-R.c.width*R.s,R.x));R.y=Math.min(0,Math.max(R.V-R.c.height*R.s,R.y));R.c.style.transform='translate('+R.x+'px,'+R.y+'px) scale('+R.s+')';$('#crz').value=R.s/R.min};
+const zoomAt=(ns,cx,cy)=>{const R=CR,k=ns/R.s;R.x=cx-(cx-R.x)*k;R.y=cy-(cy-R.y)*k;R.s=ns;fit()};
+CR.fit=fit;fit();
+v.addEventListener('pointerdown',e=>{CR.p.set(e.pointerId,[e.clientX,e.clientY]);try{v.setPointerCapture(e.pointerId)}catch(x){}});
+v.addEventListener('pointermove',e=>{const P=CR.p;if(!P.has(e.pointerId))return;const old=P.get(e.pointerId);
+if(P.size==1){CR.x+=e.clientX-old[0];CR.y+=e.clientY-old[1];P.set(e.pointerId,[e.clientX,e.clientY]);fit()}
+else if(P.size==2){const ids=[...P.keys()],o2=P.get(ids[0]==e.pointerId?ids[1]:ids[0]),d0=Math.hypot(old[0]-o2[0],old[1]-o2[1]);P.set(e.pointerId,[e.clientX,e.clientY]);const d1=Math.hypot(e.clientX-o2[0],e.clientY-o2[1]),r=v.getBoundingClientRect();if(d0>0)zoomAt(CR.s*d1/d0,(e.clientX+o2[0])/2-r.left,(e.clientY+o2[1])/2-r.top)}});
+['pointerup','pointercancel'].forEach(t=>v.addEventListener(t,e=>CR.p.delete(e.pointerId)));
+v.addEventListener('wheel',e=>{e.preventDefault();const r=v.getBoundingClientRect();zoomAt(CR.s*(e.deltaY<0?1.08:.93),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+$('#crz').addEventListener('input',e=>zoomAt(CR.min*(+e.target.value),CR.V/2,CR.V/2))}
+function cropClose(){const o=$('#cr');if(o)o.remove();CR=null;document.body.style.overflow=''}
+async function cropOk(){const R=CR;if(!R)return;const m=$('#pe'),sz=512,out=document.createElement('canvas');out.width=out.height=sz;out.getContext('2d').drawImage(R.c,-R.x/R.s,-R.y/R.s,R.V/R.s,R.V/R.s,0,0,sz,sz);cropClose();
+try{if(m)m.textContent='Envoi en cours…';const blob=await new Promise(r=>out.toBlob(r,'image/jpeg',.88)),path=`${me.id}/${Date.now()}.jpg`,u=await sb.storage.from('avatars').upload(path,blob,{contentType:'image/jpeg'});if(u.error)throw u.error;
+const r=await sb.from('profiles').update({avatar:path}).eq('id',me.id);if(r.error)throw r.error;if(me.avatar)await sb.storage.from('avatars').remove([me.avatar]);me.avatar=path;try{localStorage.setItem('mel_me',JSON.stringify(me))}catch(x){}MEMT=0;draw()}catch(e){const m2=$('#pe');if(m2)m2.textContent=e.message||'Impossible d’envoyer cette photo.'}}
 async function rmPhoto(){if(!me.avatar)return;await sb.from('profiles').update({avatar:null}).eq('id',me.id);await sb.storage.from('avatars').remove([me.avatar]);me.avatar=null;draw()}
 const PO=[['president','Président(e)'],['tresorier','Trésorier(ère)'],['secretaire','Secrétaire']];
 async function postes(){const{data}=await sb.from('profiles').select('id,name,poste').eq('status','valide').neq('role','cheffe').order('name'),ms=data||[],ed=me.role=='cheffe';
