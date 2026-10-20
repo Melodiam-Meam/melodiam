@@ -105,37 +105,52 @@ if(r.data){me=r.data;BT=0;try{localStorage.setItem('mel_me',JSON.stringify(r.dat
 else if(r.error){try{const c=JSON.parse(localStorage.getItem('mel_me')||'null');if(c&&c.id==session.user.id)me=c}catch(e){}loading=!me}
 else if(++BT>4){BT=0;try{await sb.auth.signOut({scope:'local'})}catch(e){}try{localStorage.removeItem('mel_me')}catch(e){}sb.removeAllChannels();window.lv=0}
 else loading=true}
-if(me&&me.status=='valide'&&!window.lv){window.lv=1;live()}await draw();if(!loading){hideSplash();setTimeout(()=>loadPdf().catch(()=>{}),4000)}if(loading)setTimeout(boot,1500)}
+if(me&&me.status=='valide'&&!window.lv){window.lv=1;live()}await draw();if(!loading){hideSplash();setTimeout(()=>loadPdf().catch(()=>{}),4000);if(!window.WM){window.WM=1;setTimeout(warm,1200)}}if(loading)setTimeout(boot,1500)}
+async function warm(){try{if(!me||me.status!='valide'||tab!='home'||cur)return;
+const a=await agenda();if(tab=='home')PCH['ag|'+sub]=a;
+if(tab=='home'&&!fo&&!it){const r=await folders('repertoire','Répertoire');if(tab=='home'&&!fo&&!it)PCH['rep|null|null']=r}
+if(tab=='home'&&!cur){const m=await msgList();if(tab=='home'&&!cur)window.LH=m}}catch(e){}}
 let DRB=false,DRQ=false,DRN=0;
 async function draw(){DRN++;if(DRB){DRQ=true;return}DRB=true;try{do{DRQ=false;await drawNow()}while(DRQ)}catch(e){console.error(e)}finally{DRB=false}}
-async function drawNow(){const my=DRN;clearInterval(timer);const a=$('#app'),n=$('#nav'),nc=()=>{n.innerHTML='';n.dataset.h=''};if(!(tab=='msg'&&!cur))a.dataset.v='';document.body.classList.toggle('plain',tab=='msg'&&!!me&&me.status=='valide');document.body.classList.toggle('chat',tab=='msg'&&!!cur&&!!me&&me.status=='valide');
+const PCH={},CHC={};
+async function npRefresh(my,navDraw){try{const r=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('status','en_attente');const np=r.count||0;if(np!==window.NP)navDraw(np)}catch(e){}}
+async function paint(a,key,fn,my,prev,cache=true){const k='p'+key,c=cache?PCH[key]:null;if(c!=null&&prev!==k){a.innerHTML=c;window.scrollTo(0,0)}
+const html=await fn();if(my!=DRN)return false;const y=scrollY;if(c==null||html!==c){a.innerHTML=html;if(prev===k)window.scrollTo(0,y)}if(cache)PCH[key]=html;a.dataset.v=k;return true}
+async function drawNow(){const my=DRN;clearInterval(timer);const a=$('#app'),n=$('#nav'),nc=()=>{n.innerHTML='';n.dataset.h=''},prev=a.dataset.v||'';a.dataset.v='';document.body.classList.toggle('plain',tab=='msg'&&!!me&&me.status=='valide');document.body.classList.toggle('chat',tab=='msg'&&!!cur&&!!me&&me.status=='valide');
 if(loading){nc();a.innerHTML=hd('Chargement…');return}
 if(!me){nc();a.innerHTML=hd('Bienvenue ✨')+auth();return}
 if(me.status=='en_attente'){nc();a.innerHTML=hd('Demande envoyée')+`<div class="c g"><p>Merci ${esc(first())} ! Votre demande (pupitre : ${esc(me.pupitre)}) attend la validation de la cheffe. Cette page se met à jour toute seule.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;timer=setInterval(boot,10000);return}
 if(me.status=='refuse'){nc();a.innerHTML=hd('Accès refusé')+`<div class="c"><p>Votre demande n’a pas été acceptée. Contactez la cheffe pour plus d’informations.</p><button class="o" onclick="out()">Se déconnecter</button></div>`;return}
-let np=0;if(me.role=='cheffe'){const r=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('status','en_attente');np=r.count||0}
-const bg=np?`<em class="bd">${np}</em>`:'';
-window.NP=np;const tb=(t,i,l,ex='',on)=>`<button class="${(on===undefined?tab==t:on)?'on':''}" onclick="${nv(t)}"><b>${i}</b>${l}${ex}</button>`;
+const navDraw=np=>{const bg=np?`<em class="bd">${np}</em>`:'';window.NP=np;const tb=(t,i,l,ex='',on)=>`<button class="${(on===undefined?tab==t:on)?'on':''}" onclick="${nv(t)}"><b>${i}</b>${l}${ex}</button>`;
 const nh=tb('home','⌂','Accueil')+tb('ag','▦','Agenda')+tb('rep','♫','Partitions')+tb('msg','✉','Messages','<em class="bd" id="mb" style="display:none"></em>')+tb('plus','⋯','Plus',bg,['plus','dem','bu','ch','pres','mem','me'].includes(tab));
-if(n.dataset.h!==nh){n.innerHTML=nh;n.dataset.h=nh}
+if(n.dataset.h!==nh){n.innerHTML=nh;n.dataset.h=nh}};
+navDraw(window.NP||0);
+if(me.role=='cheffe'){npRefresh(my,navDraw)}
 if(tab!='msg')updateBadge();
-if(tab!='msg'||!cur)tyLeave();if(tab!='msg'||cur)lrLeave();if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,was=window.LM,hh=await msgs();if(my!=DRN)return;if(!(was&&!cur&&window.LH===hh&&a.dataset.v=='ml'))a.innerHTML=hh;a.dataset.v=cur?'':'ml';window.LH=cur?null:hh;window.LM=!cur;window.scrollTo(0,cur?1e5:(was?y:0));updateBadge();if(cur){backBadge();tyJoin()}else{lrJoin();lrDraw()}return}
+if(tab!='msg'||!cur)tyLeave();if(tab!='msg'||cur)lrLeave();if(tab!='msg')window.LM=false;if(tab=='msg'){const y=scrollY,ck=cur?'c'+tyKey():'ml';let shown=null;
+if(prev!==ck){const c=cur?CHC[tyKey()]:window.LH;if(c){a.innerHTML=c;shown=c;window.scrollTo(0,cur?1e5:0)}}
+const hh=await msgs();if(my!=DRN)return;
+const same=(shown!=null&&shown===hh)||(prev===ck&&(cur?CHC[tyKey()]:window.LH)===hh);
+if(!same)a.innerHTML=hh;
+if(cur)CHC[tyKey()]=hh;else window.LH=hh;
+a.dataset.v=ck;window.LM=!cur;window.scrollTo(0,cur?1e5:(prev===ck?y:0));
+updateBadge();if(cur){backBadge();tyJoin()}else{lrJoin();lrDraw()}return}
 if((tab=='bu'&&me.role=='membre')||((tab=='ch'||tab=='pres')&&me.role!='cheffe')){a.innerHTML=hd(tab=='bu'?'Espace bureau':'Espace cheffe')+'<div class="c g"><b>Accès réservé</b><p>Vous ne pouvez pas entrer dans cette zone.</p></div>';return}
-if(tab=='rep'){a.innerHTML=await folders('repertoire','Répertoire');if(RD){const r=RD;RD=null;openReader(r)}return}
-if(tab=='bu'){a.innerHTML=await folders('bureau','Espace bureau');return}
-if(tab=='ch'){a.innerHTML=await folders('cheffe','Espace cheffe');return}
-if(tab=='pres'){a.innerHTML=await pres();return}
-if(tab=='mem'&&me.role=='cheffe'){a.innerHTML=await membres();return}
+if(tab=='rep'){if(!await paint(a,'rep|'+fo+'|'+it,()=>folders('repertoire','Répertoire'),my,prev,!it))return;if(RD){const r=RD;RD=null;openReader(r)}return}
+if(tab=='bu'){await paint(a,'bu|'+fo,()=>folders('bureau','Espace bureau'),my,prev);return}
+if(tab=='ch'){await paint(a,'ch|'+fo,()=>folders('cheffe','Espace cheffe'),my,prev);return}
+if(tab=='pres'){await paint(a,'pres',()=>pres(),my,prev);return}
+if(tab=='mem'&&me.role=='cheffe'){await paint(a,'mem',()=>membres(),my,prev);return}
 if(tab=='plus'){a.innerHTML=plus();return}
 if(tab=='dem'&&me.role=='cheffe'){const{data}=await sb.from('profiles').select('*').eq('status','en_attente').order('created_at');
 a.innerHTML=hd('Demandes')+(data&&data.length?data.map(u=>`<div class="c g"><b>${esc(u.name)}</b><p class="m">Pupitre : ${esc(u.pupitre)}</p><div class="r"><button class="ok" onclick="ap('${u.id}','membre')">Valider</button><button onclick="ap('${u.id}','bureau')">Valider (bureau)</button><button class="o" onclick="ap('${u.id}','refuse')">Refuser</button></div></div>`).join(''):'<div class="c m">Aucune demande en attente.</div>');return}
-if(tab=='ag'){a.innerHTML=await agenda();return}
+if(tab=='ag'){await paint(a,'ag|'+sub,()=>agenda(),my,prev);return}
 if(tab=='me'){a.innerHTML=hd('Profil')+`<div class="c g"><b>${esc(me.name)}</b><p class="m">${me.role=='cheffe'?'Cheffe de chœur':esc(me.pupitre)+(me.role=='bureau'?' · '+((PO.find(p=>p[0]==me.poste)||[])[1]||'bureau'):'')}</p><button class="o" onclick="out()">Se déconnecter</button></div>`;return}
-const l=await evs(),nx=l.find(e=>e.type=='repetition'&&new Date(e.starts_at)>new Date(Date.now()-72e5));
+await paint(a,'home',async()=>{const l=await evs(),nx=l.find(e=>e.type=='repetition'&&new Date(e.starts_at)>new Date(Date.now()-72e5));
 const hr=s=>new Date(s).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}).replace(':',' h '),dd=nx?new Date(nx.starts_at):null,mm=nx&&(nx.attendance||[]).find(x=>x.user_id==me.id),tl=(t,i,n,s)=>`<button class="tl" onclick="${nv(t)}"><i>${i}</i><b>${n}</b><small>${s}</small></button>`;
-a.innerHTML=`<div class="hero"><img src="${L}" alt="Logo Melodiam Meam"><div class="hn">MELODIAM MEAM</div><div class="hs">ENSEMBLE VOCAL</div><div class="hsc">Chanter · Partager · Vibrer</div><div class="hl"></div><p class="hq">${new Date().getHours()>=18||new Date().getHours()<4?'Bonsoir':'Bonjour'} ${esc(first())} ✨</p></div>${nbanner()}`
+return `<div class="hero"><img src="${L}" alt="Logo Melodiam Meam"><div class="hn">MELODIAM MEAM</div><div class="hs">ENSEMBLE VOCAL</div><div class="hsc">Chanter · Partager · Vibrer</div><div class="hl"></div><p class="hq">${new Date().getHours()>=18||new Date().getHours()<4?'Bonsoir':'Bonjour'} ${esc(first())} ✨</p></div>${nbanner()}`
 +`<div class="gl"><h2>Prochaine répétition</h2>`+(nx?`<div class="gb"><div class="dt"><small>${dd.toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','').toUpperCase()}</small><b>${dd.getDate()}</b><small>${dd.toLocaleDateString('fr-FR',{month:'short'}).replace('.','').toUpperCase()}</small></div><div class="gi"><b>${esc(nx.title)}</b><span>${hr(nx.starts_at)}${nx.ends_at?' – '+hr(nx.ends_at):''}</span>${nx.location?`<span>${esc(nx.location)}</span>`:''}</div></div><div class="r"><button class="${mm&&mm.status=='present'?'ok':'o'}" onclick="rsvp(${nx.id},'present')">✓ Présent(e)</button><button class="${mm&&mm.status=='absent'?'no':'o'}" onclick="rsvp(${nx.id},'absent')">✗ Absent(e)</button><button onclick="tab='ag';draw()">Voir les détails →</button></div>`:'<p class="m">Aucune répétition à venir. Les prochaines dates apparaîtront ici.</p>')+`</div>`
-+`<h2>Accès rapides</h2><div class="g3">${tl('ag','▦','Calendrier','Répétitions et concerts')}${tl('rep','♫','Partitions','Nos œuvres')}${tl('msg','✉','Messages','Échanger ensemble')}${tl('bu','▤','Bureau','Documents et postes')}${tl('ch','★','Cheffe','Demandes et présences')}${tl('plus','☺','Mon profil','Photo et compte')}</div><div class="sep"></div><a class="web" href="https://melodiammeam.wixsite.com/accueilmelodiam" target="_blank" rel="noopener">Le site internet</a>`}
++`<h2>Accès rapides</h2><div class="g3">${tl('ag','▦','Calendrier','Répétitions et concerts')}${tl('rep','♫','Partitions','Nos œuvres')}${tl('msg','✉','Messages','Échanger ensemble')}${tl('bu','▤','Bureau','Documents et postes')}${tl('ch','★','Cheffe','Demandes et présences')}${tl('plus','☺','Mon profil','Photo et compte')}</div><div class="sep"></div><a class="web" href="https://melodiammeam.wixsite.com/accueilmelodiam" target="_blank" rel="noopener">Le site internet</a>`},my,prev)}
 const fdt=s=>new Date(s).toLocaleString('fr-FR',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}).replace(':',' h ');
 async function evs(){const{data}=await sb.from('events').select('*,attendance(user_id,status,profiles(name,pupitre))').gte('starts_at',new Date(Date.now()-864e5).toISOString()).order('starts_at');const L=(data||[]).filter(e=>+new Date(e.ends_at||+new Date(e.starts_at)+72e5)>Date.now());L.forEach(e=>EV[e.id]=e);return L}
 function evc(e,del){const at=e.attendance||[],m=at.find(x=>x.user_id==me.id),p=at.filter(x=>x.status=='present'),n=at.filter(x=>x.status=='absent'),rp=e.type=='repetition',nm=l=>l.map(x=>esc((x.profiles||{}).name||'?')).join(', ')||'—';
