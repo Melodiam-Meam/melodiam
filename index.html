@@ -525,7 +525,8 @@ if(window.visualViewport){const f=()=>{const v=visualViewport,o=Math.max(0,Math.
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 const RX={},EMO=['👍','❤️','😂','😮','😢','🙏'];
 function rxh(m){const rs=m.message_reactions||[];RX[m.id]={rs,t:(m.kind||m.image)?'':m.body};if(!rs.length)return'';const g={};rs.forEach(r=>(g[r.emoji]=g[r.emoji]||[]).push(r.user_id));
-return '<div class="rx">'+Object.entries(g).map(([e,u])=>`<span class="rc${u.includes(me.id)?' on':''}" onclick="react(${m.id},'${e}')">${e} ${u.length}</span>`).join('')+'</div>'}
+return '<div class="rx">'+Object.entries(g).map(([e,u])=>`<span class="rc${u.includes(me.id)?' on':''}" onclick="showRx(${m.id})">${e} ${u.length}</span>`).join('')+'</div>'}
+async function showRx(id){await loadMem();const rs=(RX[id]||{}).rs||[],by=Object.fromEntries((MEM||[]).map(u=>[u.id,u])),own=rs.find(r=>r.user_id==me.id);sheet('Réactions',(rs.length?rs.map(r=>{const u=by[r.user_id]||(r.user_id==me.id?me:null);return `<div class="r" style="flex-wrap:nowrap;align-items:center;gap:10px;margin:8px 0">${av(u&&u.name,u&&u.avatar,32,r.user_id)}<b style="flex:1">${esc(u?fn(u):'?')}</b><span style="font-size:1.4rem">${r.emoji}</span></div>`}).join(''):'<p class="m">Aucune réaction.</p>')+(own?`<button class="o" style="margin-top:10px" onclick="react(${id},'${own.emoji}')">Retirer ma réaction ${own.emoji}</button>`:''))}
 async function react(id,e){const rs=(RX[id]||{}).rs||[],own=rs.find(r=>r.user_id==me.id);$('#sh').hidden=true;
 if(own&&own.emoji==e)await sb.from('message_reactions').delete().eq('message_id',id).eq('user_id',me.id);else await sb.from('message_reactions').upsert({message_id:id,user_id:me.id,emoji:e},{onConflict:'message_id,user_id'});await refreshChat(1)}
 function openReact(id){const d=RX[id]||{rs:[]},own=d.rs.find(r=>r.user_id==me.id);if(navigator.vibrate)try{navigator.vibrate(15)}catch(x){}
