@@ -112,7 +112,12 @@ const a=await agenda();if(tab=='home')PCH['ag|'+sub]=a;
 if(tab=='home'&&!fo&&!it){const r=await folders('repertoire','Répertoire');if(tab=='home'&&!fo&&!it)PCH['rep|null|null']=r}
 if(tab=='home'&&!cur){const m=await msgList();if(tab=='home'&&!cur)window.LH=m}}catch(e){}}
 let DRB=false,DRQ=false,DRN=0;
-async function draw(){DRN++;if(DRB){DRQ=true;return}DRB=true;try{do{DRQ=false;await drawNow()}while(DRQ)}catch(e){console.error(e)}finally{DRB=false}}
+const HS=[];let HI=-1,HX=0;
+const hsnap=()=>JSON.stringify([tab,cur,TH,fo,it,sub]);
+function hrec(){try{const n=hsnap();if(HI<0){HS[0]=n;HI=0;history.replaceState({i:0},'');return}if(HS[HI]==n)return;if(HI>0&&HS[HI-1]==n){HI--;HX++;history.back();return}HS.length=HI+1;HS.push(n);HI++;history.pushState({i:HI},'')}catch(e){}}
+function hover(){if(!$('#sh').hidden){$('#sh').hidden=true;return 1}const l=$('#lb');if(l&&!l.hidden){closeImg();return 1}const r=$('#rd');if(r&&!r.hidden){closeR();return 1}const z=$('#al');if(z&&!z.hidden){avClose();return 1}return 0}
+addEventListener('popstate',e=>{if(HX>0){HX--;return}const i=e.state&&typeof e.state.i=='number'?e.state.i:null;if(i===null||!HS[i])return;if(hover()){history.go(HI-i);HX++;return}try{[tab,cur,TH,fo,it,sub]=JSON.parse(HS[i])}catch(x){return}HI=i;draw()});
+async function draw(){hrec();DRN++;if(DRB){DRQ=true;return}DRB=true;try{do{DRQ=false;await drawNow()}while(DRQ)}catch(e){console.error(e)}finally{DRB=false}}
 const PCH={},CHC={};
 async function npRefresh(my,navDraw){try{const r=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('status','en_attente');const np=r.count||0;if(np!==window.NP)navDraw(np)}catch(e){}}
 async function paint(a,key,fn,my,prev,cache=true){const k='p'+key,c=cache?PCH[key]:null;if(c!=null&&prev!==k){a.innerHTML=c;window.scrollTo(0,0)}
