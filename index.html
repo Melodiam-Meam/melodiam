@@ -307,8 +307,8 @@ document.querySelectorAll('.vm').forEach(el=>{const on=VA&&VA.id==el.dataset.id,
 el.querySelector('.vp').textContent=a&&!a.paused?'⏸':'▶';el.querySelector('.vb i').style.width=(du?Math.min(100,cu*100/du):0)+'%';el.querySelector('.vt').textContent=vfmt(a&&cu>0?cu:tot)})}
 const ph=t=>{const e=$('#pm2');if(e)e.textContent=t};
 async function sendPhoto(f,lab,n){ph('Envoi de la photo'+lab+'…');
-try{const bm=await createImageBitmap(f),mk=mx=>{const s=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*s);c.height=Math.round(bm.height*s);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.82))};
-const base=cur=='prive'?`prive/${me.id}/${TH}/${Date.now()}${n}`:`${cur}/${me.id}/${Date.now()}${n}`,full=base+'.jpg',th=base+'_t.jpg',b1=await mk(1600),b2=await mk(480);
+try{const bm=await createImageBitmap(f),mk=(mx,q)=>{const s=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*s);c.height=Math.round(bm.height*s);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',q))};
+const base=cur=='prive'?`prive/${me.id}/${TH}/${Date.now()}${n}`:`${cur}/${me.id}/${Date.now()}${n}`,full=base+'.jpg',th=base+'_t.jpg',b1=await mk(2560,.92),b2=await mk(900,.85);
 for(const[p,b]of[[full,b1],[th,b2]]){const u=await sb.storage.from('chat').upload(p,b,{contentType:'image/jpeg'});if(u.error)throw u.error}
 const r=await sb.from('messages').insert({channel:cur,body:'',kind:'photo',image:full,...thr()});if(r.error)throw r.error;ph('');await refreshChat(1);scrollTo(0,1e5)}catch(e){ph(e.message||'Envoi impossible')}}
 const MAXF=50*1024*1024;
